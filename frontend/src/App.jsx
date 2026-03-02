@@ -6,6 +6,7 @@ import Footer from './commonpages/Footer'
 import Login from './commonpages/Login'
 import Signup from './commonpages/Signup'
 import About from './commonpages/About'
+import Contact from './commonpages/Contact'
 
 
 const MainLayout = () => {
@@ -32,7 +33,7 @@ const route = createBrowserRouter([
       },
       {
         path: "/contact",
-        element: <About />
+        element: <Contact  />
       },
     ]
   },
