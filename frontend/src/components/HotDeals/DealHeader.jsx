@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ComonButton from '../../commonpages/ComonButton';
-import { FaStar } from 'react-icons/fa';
+import { FaBolt } from 'react-icons/fa';
 
 export default function DealHeader() {
     const [activeTab, setActiveTab] = useState('women');
@@ -19,35 +19,69 @@ export default function DealHeader() {
             discount: "50%",
             subtitle: "New Arrivals",
             desc: "Elevate your everyday look. Discover premium tailoring, relaxed fits, and winter essentials designed exclusively for the modern gentleman.",
-            image: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?q=80&w=1887&auto=format&fit=crop", // Men's fashion
+            image: "https://static.vecteezy.com/system/resources/thumbnails/059/006/878/small_2x/a-man-in-a-brown-sweater-and-beige-trousers-holds-a-coat-his-thoughtful-pose-exudes-autumn-sophistication-and-classic-fashion-free-png.png", // Men's fashion
         }
     };
 
     const currentData = collections[activeTab];
 
     return (
-        <section className="w-full bg-white pt-12 pb-4 overflow-hidden font-sans">
+        <section className="w-full bg-white pt- pb-4 overflow-hidden font-sans">
             <div className="container mx-auto px-4 md:px-8 relative">
 
-                {/* ========================================= */}
-                <div className="absolute right-4 h-30 w-40 top-4 md:right-10 md:-top-6 z-40 group">
+             
 
-                    <img src="https://img.freepik.com/premium-photo/sale-text-black-background-3d-illustration_357568-782.jpg?ga=GA1.1.2142144714.1772005373&semt=ais_hybrid&w=740&q=80" className='h-full w-full ' alt="" />
-                </div>
-                
-                {/* TOP HUGE HEADING */}
                 {/* ========================================= */}
+                <div className="absolute h-42 w-[240px] md:w-[280px] top-4 left-4 md:flex hidden md:-top-6 z-40 group hover:scale-105 transition-transform duration-300">
+
+                    {/* The Background Template Image */}
+                    <div className='h-full w-full bg-cover bg-center  bg-no-repeat relative overflow-hidden rounded-xl  transform -rotate-18 ' style={{
+                        background: 'url(https://static.vecteezy.com/system/resources/thumbnails/033/356/539/small_2x/flash-sale-promotion-banner-template-design-with-space-free-png.png)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                    }}>
+
+                        {/* Tilted Text Overlay Container */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10 transform -rotate-12 transition-transform duration-500 group-hover:-rotate-6">
+
+                            {/* The Slanted Text Box */}
+                            <div className=" text-white py-4 px-6 rounded-2xl w-[90%] flex flex-col items-center justify-center">
+
+
+                                {/* Text Layout */}
+                                <div className="text-center">
+                                    <p className="text-[#007074] text-[10px] md:text-xs font-bold tracking-widest uppercase mb-[-4px]">
+                                        Exclusive
+                                    </p>
+                                    <h3 className="text-white text-3xl  leading-none tracking-tighter my-2 font-semibold  ">
+                                        HOT<span className="text-white ml-1">DEALS</span>
+                                    </h3>
+                                    <div className="text-[10px] md:text-xs font-bold uppercase tracking-widest bg-[#007074] text-white px-4 py-1 rounded-full mt-1.5 border border-[#222222] ">
+                                        Up To {currentData.discount} OFF
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        {/* Background Pulse Effect inside the template area */}
+                        <div className="absolute inset-0 bg-[#007074]/10 animate-pulse rounded-xl"></div>
+
+                    </div>
+                </div>
+
+
+                   {/* ========================================= */}
+                {/* TILTED "HOT DEALS" POSTER BANNER          */}
                 <h1
                     key={`title-${activeTab}`}
-                    className="text-[3.5rem] md:text-7xl  max-w-6xl   font-bold text-[#222222] leading-[1.1] tracking-tight mb-8 relative z-10 animate-fade-in-up"
+                    className="text-2xl  md:text-[3.4rem] text-center font-bold text-[#222222] leading-[1.1] tracking-tight mt-10 md:mb-8 relative z-10 animate-fade-in-up "
                 >
-                    New <span className='text-[#007074]'>{currentData.season}</span> <br /> Collection
+                    New <span className='text-[#007074]'>{currentData.season}</span>  Collection
                 </h1>
-
-                {/* ========================================= */}
                 {/* MAIN DARK BANNER */}
                 {/* ========================================= */}
-                <div className="relative bg-[#111111] rounded-md w-full min-h-[400px] mt-24 flex flex-col md:flex-row">
+                <div className="relative bg-[#111111] rounded-md w-full min-h-[400px] md:mt-24 mt-10 flex flex-col md:flex-row">
 
                     {/* LEFT CONTENT (Toggle & Text) */}
                     <div className="w-full md:w-1/2 p-8  flex flex-col relative z-20 ">
@@ -114,23 +148,6 @@ export default function DealHeader() {
 
             {/* Tailwind Custom Keyframes */}
             <style jsx="true">{`
-              /* Added the missing slide animations back! */
-              @keyframes slideLeft {
-                0% { transform: translateX(0); }
-                100% { transform: translateX(-50%); }
-              }
-              @keyframes slideRight {
-                0% { transform: translateX(-50%); }
-                100% { transform: translateX(0); }
-              }
-              .animate-slide-left {
-                animation: slideLeft 6s linear infinite;
-              }
-              .animate-slide-right {
-                animation: slideRight 6s linear infinite;
-              }
-
-              /* Your existing animations */
               @keyframes fadeInUp {
                 0% { opacity: 0; transform: translateY(20px); }
                 100% { opacity: 1; transform: translateY(0); }
@@ -146,6 +163,6 @@ export default function DealHeader() {
                 animation: fadeInScale 0.6s ease-out forwards;
               }
             `}</style>
-        </section>
+        </section >
     );
 }

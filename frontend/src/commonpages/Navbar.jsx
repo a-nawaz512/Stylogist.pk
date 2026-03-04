@@ -85,7 +85,7 @@ export default function Navbar() {
           <span className={`absolute bottom-0 left-0 h-0.5 transition-all duration-300 w-0 group-hover:w-full ${link.highlight ? 'bg-[#007074]' : 'bg-[#222222]'}`}></span>
 
           {link.hasDropdown && (
-            <div className="absolute left-0 top-full w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+            <div className="absolute left-0 top-full w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-300">
               <div className="bg-white border border-gray-100 rounded-md shadow-xl py-2 flex flex-col transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300 mt-1">
                 {link.subItems.map((sub, subIdx) => (
                   <Link
@@ -106,7 +106,7 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="bg-[#222222] text-white py-2 px-4 text-center text-[10px] md:text-xs font-bold tracking-widest uppercase relative z-50">
+      <div className="bg-[#222222] text-white py-2 px-4 text-center text-[10px] md:text-xs font-bold tracking-widest uppercase relative z-300">
         <div className="container mx-auto flex items-center justify-center space-x-6">
           <span className="flex items-center space-x-2">
             <FiTruck className="text-[#007074] text-sm" />
@@ -120,7 +120,7 @@ export default function Navbar() {
         This stops the browser from bouncing during layout calculation. 
       */}
       <nav 
-        className={`sticky top-0 z-40 w-full bg-white transition-all duration-500 ease-in-out border-b border-gray-100 ${
+        className={`sticky top-0 z-400 w-full bg-white transition-all duration-500 ease-in-out border-b border-gray-100 ${
           isScrolled ? 'h-[72px] shadow-md' : 'h-[120px]'
         }`}
       >

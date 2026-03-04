@@ -6,6 +6,7 @@ import NewArrivals from '../components/home/NewArrivals'
 import DealsOfDay from '../components/home/DealsOfDay'
 import CategoryHighlights from '../components/home/CategoryHighlights'
 import AiSuggestedProducts from '../components/home/AiSuggestedProducts'
+import CustomerReviews from './CustomerReviews'
 
 export default function Home() {  
   return (
@@ -17,6 +18,7 @@ export default function Home() {
       <TrendingProducts />
       <CategoryHighlights/>
       <AiSuggestedProducts/>
+      <CustomerReviews/>
     </div>
   )
 }

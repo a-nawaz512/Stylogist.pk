@@ -73,8 +73,8 @@ export default function TrendingProducts() {
 
     return (
       <div className="flex items-center space-x-0.5">
-        {[...Array(fullStars)].map((_, i) => <FaStar key={`full-${i}`} className="text-[#007074] w-3 h-3" />)}
-        {halfStar && <FaStarHalfAlt className="text-[#007074] w-3 h-3" />}
+        {[...Array(fullStars)].map((_, i) => <FaStar key={`full-${i}`} className="text-yellow-400 w-3 h-3" />)}
+        {halfStar && <FaStarHalfAlt className="text-yellow-400 w-3 h-3" />}
         {[...Array(emptyStars)].map((_, i) => <FaRegStar key={`empty-${i}`} className="text-[#007074] w-3 h-3" />)}
       </div>
     );
@@ -185,7 +185,7 @@ export default function TrendingProducts() {
                   </div>
 
                   {/* Reusing your custom button */}
-                  <ComonButton btntitle="Add to Cart" icon={<FaShoppingBag size={16} />} />
+                  <ComonButton padding='py-2' btntitle="Add to Cart" icon={<FaShoppingBag size={16} />} />
                 </div>
               </div>
             </div>
