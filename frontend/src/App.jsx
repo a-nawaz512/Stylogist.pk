@@ -15,6 +15,7 @@ import ProductDetailsPage from './commonpages/SingleProductPage'
 import CartPage from './commonpages/CartPage'
 import WishlistPage from './commonpages/WishlistPage'
 import CheckoutPage from './commonpages/checkoutPage'
+import PageNotFound from './commonpages/PageNotFound'
 
 
 const MainLayout = () => {
@@ -66,21 +67,22 @@ const route = createBrowserRouter([
         element: <ProductDetailsPage />
       },
       {
-        path: "/review-cart",
+        path: "/cart",
         element: <CartPage />
       },
       {
-        path: "/check-out",
+        path: "/checkout",
         element: <CheckoutPage />
       },
       {
-        path: "/saved-for-later",
+        path: "/wishlist",
         element: <WishlistPage />
       },
+     
     ]
   },
 
-  { path: '*', element: <h1>404 Not Found</h1> },
+  { path: '*', element: <PageNotFound /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   {
