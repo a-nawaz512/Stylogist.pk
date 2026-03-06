@@ -11,6 +11,7 @@ import HotDeals from './commonpages/HotDeals'
 import CategoryPage from './components/category/CategoryPage'
 import ForgotPassword from './commonpages/ForgotPassword'
 import TermsPrivacy from './commonpages/TermsPrivacy'
+import PageNotFound from './commonpages/PageNotFound'
 
 
 const MainLayout = () => {
@@ -60,7 +61,7 @@ const route = createBrowserRouter([
     ]
   },
 
-  { path: '*', element: <h1>404 Not Found</h1> },
+  { path: '*', element: <PageNotFound /> },
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   {
