@@ -60,16 +60,16 @@ export default function Navbar() {
       ],
     },
     { name: 'About', path: '/about' },
-    { name: 'Concierge', path: '/contact' },
+    { name: 'Contact', path: '/contact' },
     { name: 'Hot Deals', path: '/deals', highlight: true },
   ];
 
   return (
     <>
       {/* 1. TOP ANNOUNCEMENT BAR */}
-      <div className="bg-[#222] text-white py-2 px-4 text-center text-[9px] font-black tracking-[0.3em] uppercase relative z-[80]">
+      <div className="bg-[#222] text-white py-2 px-4 text-center text-[6px] sm:text-[9px] font-black tracking-[0.3em] uppercase relative z-[80]">
         <div className="container mx-auto flex items-center justify-center gap-2">
-          <FiTruck className="text-[#007074]" />
+          <FiTruck className="text-[#007074] text-[8px]" />
           <span>Complimentary Shipping on orders over Rs. 5000</span>
         </div>
       </div>
@@ -103,8 +103,8 @@ export default function Navbar() {
                 </NavLink>
 
                 {link.hasDropdown && (
-                  <div className="absolute left-1/2 -translate-x-1/2 top-full pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
-                    <div className="bg-white border border-gray-100 rounded-[2rem] shadow-2xl p-6 w-48 flex flex-col gap-4 relative overflow-hidden">
+                  <div className="absolute left-1/2 -translate-x-1/2 top-full  opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
+                    <div className="bg-white border border-gray-100 rounded-md shadow-2xl p-6 w-48 flex flex-col gap-4 relative overflow-hidden">
                       <div className="absolute top-0 right-0 w-16 h-16 bg-[#007074]/5 rounded-bl-[3rem]" />
                       {link.subItems.map((sub) => (
                         <Link key={sub.name} to={sub.path} className="text-[10px] font-black uppercase tracking-widest text-gray-500 hover:text-[#007074] transition-colors relative z-10">{sub.name}</Link>
@@ -186,10 +186,10 @@ export default function Navbar() {
       </div>
 
       {/* 4. MOBILE SIDEBAR MENU (Updated for User state) */}
-      <div className={`lg:hidden fixed inset-0 z-[90] transition-all duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={() => setIsOpen(false)}>
+      <div className={`lg:hidden fixed inset-0 z-[90] w- transition-all duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible'}`} onClick={() => setIsOpen(false)}>
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
-        <div className={`absolute left-0 top-0 h-full w-[80%] bg-white shadow-2xl transition-transform duration-500 ease-out flex flex-col p-10 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
-          <div className="flex flex-col gap-6">
+        <div className={`absolute left-0 top-0 h-full w-[60%] sm:w-[40%] bg-white shadow-2xl transition-transform duration-500 ease-out flex flex-col p-10 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} onClick={(e) => e.stopPropagation()}>
+          <div className="flex flex-col gap-3 sm:gap-6">
             {user ? (
                <div className="flex items-center gap-4 mb-6 p-4 bg-slate-50 rounded-3xl border border-slate-100">
                   <img src={user.avatar || "https://ui-avatars.com/api/?name=" + user.name} className="w-12 h-12 rounded-2xl object-cover" alt="User" />
@@ -201,11 +201,11 @@ export default function Navbar() {
             ) : (
               <div className="mb-6">
                 <div className="w-12 h-12 bg-[#222] rounded-2xl flex items-center justify-center mb-4"><span className="text-white text-2xl font-serif font-black italic">S</span></div>
-                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Stylogist Boutique</p>
+                <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.4em]">Stylogist.pk</p>
               </div>
             )}
             {navLinks.map((link) => (
-              <Link key={link.name} to={link.path} className="text-2xl font-serif font-black text-[#222]">{link.name}</Link>
+              <Link key={link.name} to={link.path} className="text-md sm:text-2xl font-serif lg:font-black text-[#222]">{link.name}</Link>
             ))}
           </div>
           <div className="mt-auto pt-10 border-t border-gray-100 flex flex-col gap-6">

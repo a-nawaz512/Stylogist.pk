@@ -33,7 +33,7 @@ export default function Contact() {
           <h1 className="animate-reveal [animation-delay:400ms] text-5xl md:text-7xl font-serif font-black text-gray-400 leading-tight tracking-tighter mb-6">
             Get in <span className="italic text-[#007074]">Touch.</span>
           </h1>
-          <p className="animate-reveal [animation-delay:600ms] text-gray-500 text-sm md:text-base uppercase tracking-widest font-medium max-w-2xl mx-auto">
+          <p className="animate-reveal lg:hidden [animation-delay:600ms] text-white lg:text-gray-500 text-sm md:text-base uppercase tracking-widest font-medium max-w-2xl mx-auto">
             From neural styling advice to order tracking, our team is ready to curate your experience.
           </p>
         </div>
@@ -46,15 +46,15 @@ export default function Contact() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
 
           {/* LEFT: PREMIUM CONCIERGE FORM */}
-          <div className="lg:col-span-7 bg-white rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden animate-reveal [animation-delay:800ms]">
+          <div className="lg:col-span-7 bg-white rounded-md lg:rounded-[2.5rem] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] border border-gray-100 overflow-hidden animate-reveal [animation-delay:800ms]">
             <div className="bg-[#222] p-8 md:p-12 text-white relative overflow-hidden">
                <div className="absolute top-0 right-0 w-32 h-32 bg-[#007074]/20 rounded-full blur-3xl" />
-               <h3 className="text-2xl font-serif font-black mb-2 relative z-10">Send an Inquiry</h3>
-               <p className="text-gray-400 text-[12px] font-black uppercase tracking-[0.2em] relative z-10">Average response time: 2 Hours</p>
+               <h3 className="text-xl lg:text-2xl lg:font-serif lg:font-black mb-2 relative z-10">Send an Inquiry</h3>
+               <p className="text-gray-400 text-[10px] lg:text-[12px] font-black uppercase tracking-[0.2em] relative z-10">Average response time: 2 Hours</p>
             </div>
 
             <form className="p-8 md:p-12 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-8">
                 <div className="group space-y-2">
                   <label className="text-[12px] font-black uppercase tracking-widest text-gray-700 group-focus-within:text-[#007074] transition-colors">Full Name</label>
                   <input type="text" placeholder="Javeria Khan" className="w-full bg-gray-50 border-none rounded-xl py-4 px-6 text-sm  focus:ring-2 shadow-lg focus:ring-[#007074]/20 outline-none transition-all" />
@@ -80,26 +80,26 @@ export default function Contact() {
                 <textarea rows="4" placeholder="How can we elevate your journey?" className="w-full bg-gray-50 border-none rounded-2xl p-6 text-sm focus:ring-2 shadow-lg focus:ring-[#007074]/20 outline-none transition-all resize-none" />
               </div>
 
-              <button className="w-full bg-[#222] text-white py-5 rounded-full font-black uppercase tracking-[0.3em] text-[11px] hover:bg-[#007074] shadow-xl hover:shadow-[#007074]/40 transition-all duration-500 active:scale-95 flex items-center justify-center gap-3">
+              <button className="w-full bg-[#222] text-white  py-3 lg:py-5 rounded-full lg:font-black lg:uppercase tracking-[0.3em] text-[11px] hover:bg-[#007074] shadow-xl hover:shadow-[#007074]/40 transition-all duration-500 active:scale-95 flex items-center justify-center gap-3">
                 Dispatch Inquiry <FiSend size={16} />
               </button>
             </form>
           </div>
 
           {/* RIGHT: FRAMED INFO CARDS */}
-          <div className="lg:col-span-5 space-y-6 animate-reveal [animation-delay:1000ms]">
+          <div className="lg:col-span-5  space-y-3 lg:space-y-6 animate-reveal [animation-delay:1000ms]">
             <div className="bg-white rounded-[2.5rem] p-10 border border-gray-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative overflow-hidden">
               <div className="absolute top-0 right-0 w-24 h-24 bg-[#007074]/5 rounded-bl-[5rem]" />
-              <h3 className="text-xl font-serif font-black text-[#222] mb-10">The Hub</h3>
+              <h3 className="lg:text-xl  font-serif font-black text-[#222] mb-10">The Hub</h3>
 
-              <div className="space-y-10">
+              <div className="space-y-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1  lg:space-y-10">
                 <div className="flex gap-5 group">
                   <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center text-[#222] group-hover:bg-[#007074] group-hover:text-white transition-all shadow-md">
                     <FiMapPin size={20} />
                   </div>
                   <div>
-                    <h4 className="text-[12px] font-black uppercase tracking-widest text-[#007074] mb-2">Headquarters</h4>
-                    <p className="text-sm font-medium text-gray-500 leading-relaxed">Stylogist Digital Studio<br/>Commercial Hub, Bahawalpur<br/>Punjab, Pakistan</p>
+                    <h4 className="text-[12px] lg:ext-[12px] font-black uppercase tracking-widest text-[#007074] mb-2">Headquarters</h4>
+                    <p className="text-[10px] lg:text-sm font-medium text-gray-500 leading-relaxed">Stylogist Digital Studio <br/>Commercial Hub, Bahawalpur<br/>Punjab, Pakistan</p>
                   </div>
                 </div>
 
@@ -134,20 +134,12 @@ export default function Contact() {
               </div>
             </div>
 
-            {/* TRUST INDICATOR */}
-            <div className="bg-[#007074]/5 rounded-[2rem] p-8 border border-[#007074]/10 flex items-center gap-5">
-               <FiShield className="text-[#007074] shrink-0" size={28} />
-               <div>
-                  <p className="text-xs font-black text-[#222] uppercase tracking-tighter">Encrypted Communication</p>
-                  <p className="text-[12px] text-gray-700 uppercase tracking-widest mt-1">Your data is secured with AES-256 bits</p>
-               </div>
-            </div>
           </div>
         </div>
       </div>
 
       {/* MAP SHOWCASE */}
-      <div className="container mx-auto px-6 mt-20 animate-reveal [animation-delay:1200ms]">
+      <div className="container mx-auto px-6 mt-10 animate-reveal [animation-delay:1200ms]">
         <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl border-[10px] border-white h-80 grayscale hover:grayscale-0 transition-all duration-1000">
           <iframe
             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d110502.6038503112!2d71.61118165039327!3d29.3957211186716!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x393b90c490ef4315%3A0x926de2f748039755!2sBahawalpur%2C%20Punjab%2C%20Pakistan!5e0!3m2!1sen!2s!4v1741270000000!5m2!1sen!2s"

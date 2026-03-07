@@ -33,7 +33,7 @@ export default function DealHeader() {
 
 
                 {/* ========================================= */}
-                <div className="absolute h-42 w-[240px] md:w-[280px] top-4 left-4 md:flex hidden md:-top-6 z-40 group hover:scale-105 transition-transform duration-300">
+                <div className="absolute h-42 w-[240px] md:w-[280px] top-4 left-4 lg:flex hidden md:-top-6 z-40 group hover:scale-105 transition-transform duration-300">
 
                     {/* The Background Template Image */}
                     <div className='h-full w-full bg-cover bg-center  bg-no-repeat relative overflow-hidden rounded-xl  transform -rotate-18 ' style={{

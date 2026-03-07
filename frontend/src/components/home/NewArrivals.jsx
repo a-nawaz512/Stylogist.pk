@@ -66,11 +66,11 @@ export default function NewArrivals() {
   };
 
   return (
-    <section className="w-full bg-white py-16 md:py-6 overflow-hidden">
+    <section className="w-full bg-white py-10 overflow-hidden">
       <div className="container mx-auto px-6 max-w-6xl">
-        
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 lg:gap-16 items-center">
-          
+
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 sm:gap-12 lg:gap-16 items-center">
+
           {/* LEFT SIDE: CONTENT & INTERACTIVE MENU (5 Columns) */}
           <div className="md:col-span-5 flex flex-col justify-center">
             {/* Header */}
@@ -78,109 +78,106 @@ export default function NewArrivals() {
               <div className="inline-block bg-[#007074]/10 text-[#007074] text-[10px] font-black px-3 py-1 rounded-full mb-4 uppercase tracking-[0.2em]">
                 Fresh Drops
               </div>
-              <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] leading-tight tracking-tight">
+              <h2 className="text-2xl sm:text-2xl lg:text-4xl font-serif font-black text-[#222] leading-tight tracking-tight">
                 The <span className="italic text-[#007074]">New Editorials</span>
               </h2>
-              <p className="text-gray-400 mt-6 text-sm leading-relaxed uppercase tracking-wide font-medium">
+              <p className="text-gray-400 mt-6 text-sm sm:leading-relaxed sm:uppercase tracking-wide font-medium">
                 Explore the latest additions to our premium collection, curated to elevate your everyday ritual.
               </p>
             </div>
 
             {/* Interactive Product List */}
-            <div className="flex flex-col space-y-8 relative border-l border-gray-100 pl-8 ml-1">
+            <div className="flex flex-col space-y-5 lg:space-y-8 relative border-l border-gray-100 pl-8 ml-1">
               {/* Animated active indicator line */}
-              <div 
-                className="absolute left-[-1px] w-[2px] bg-[#007074] transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1)"
-                style={{ 
-                  height: '25%', 
-                  top: `${activeIndex * 25}%` 
+              <div
+                className="absolute left-[-1px] w-[2px] bg-[#007074] transition-all duration-700 h-[15%] sm:h-[5%] cubic-bezier(0.16, 1, 0.3, 1)"
+                style={{
+                  // height: '25%', 
+                  top: `${activeIndex * 25}%`
                 }}
               />
 
               {newArrivals.map((product, index) => (
-                <div 
+                <div
                   key={product.id}
                   className="cursor-pointer group"
                   onClick={() => handleItemClick(index)}
                 >
-                  <p className={`text-[9px] font-black tracking-[0.2em] uppercase transition-colors duration-500 ${
-                    activeIndex === index ? 'text-[#007074]' : 'text-gray-300'
-                  }`}>
+                  <p className={`text-[9px] font-black tracking-[0.2em] uppercase transition-colors duration-500 ${activeIndex === index ? 'text-[#007074]' : 'text-gray-300'
+                    }`}>
                     {product.category}
                   </p>
-                  <h3 className={`text-lg mt-2 font-serif font-black transition-all duration-500 transform ${
-                    activeIndex === index ? 'text-[#222] translate-x-2' : 'text-gray-400 group-hover:text-gray-600'
-                  }`}>
+                  <h3 className={`text-sm lg:text-lg mt-2 font-serif font-black transition-all duration-500 transform ${activeIndex === index ? 'text-[#222] translate-x-2' : 'text-gray-400 group-hover:text-gray-600'
+                    }`}>
                     {product.name}
                   </h3>
                 </div>
               ))}
             </div>
 
-            {/* Global CTA */}
-            <div className="mt-12">
-              <Link
-                to="/category"
-                className="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#222] hover:text-[#007074] transition-all group"
-              >
-                View Full Collection
-                <div className="w-8 h-[1px] bg-gray-200 group-hover:w-12 group-hover:bg-[#007074] transition-all duration-500" />
-                <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
+
           </div>
 
           {/* RIGHT SIDE: CINEMATIC IMAGE SHOWCASE (7 Columns) */}
-          <div className="md:col-span-7 relative h-[400px] md:h-[600px] rounded-[2.5rem] overflow-hidden shadow-2xl group border border-gray-100 p-2 bg-white">
-            <div className="w-full h-full rounded-[2rem] overflow-hidden relative">
-                {newArrivals.map((product, index) => (
+          <div className="md:col-span-7 relative h-[250px] md:h-[400px] rounded-md overflow-hidden shadow-2xl group border border-gray-100 p-2 bg-white">
+            <div className="w-full h-full  sm:rounded-[2rem] overflow-hidden relative">
+              {newArrivals.map((product, index) => (
                 <div
-                    key={`img-${product.id}`}
-                    className={`absolute inset-0 w-full h-full transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${
-                    activeIndex === index ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-110 z-0 pointer-events-none'
+                  key={`img-${product.id}`}
+                  className={`absolute inset-0 w-full h-full transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) ${activeIndex === index ? 'opacity-100 scale-100 z-10' : 'opacity-0 scale-110 z-0 pointer-events-none'
                     }`}
                 >
-                    {/* Product Image */}
-                    <img 
-                    src={product.image} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                    />
-                    
-                    {/* Gradient Overlay for content visibility */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  {/* Product Image */}
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full rounded-md object-cover transition-transform duration-1000 group-hover:scale-105"
+                  />
 
-                    {/* Floating Glassmorphism Product Card */}
-                    <div className={`absolute bottom-8 left-8 right-8 bg-white/90 backdrop-blur-xl p-6 rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] border border-white/50 transition-all duration-700 delay-200 ${
-                    activeIndex === index ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
+                  {/* Gradient Overlay for content visibility */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+
+                  {/* Floating Glassmorphism Product Card */}
+                  <div className={`absolute bottom-3 sm:bottom-8 left-8 right-8 bg-white/90 backdrop-blur-xl p-6 rounded-md sm:rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] border border-white/50 transition-all duration-700 delay-200 ${activeIndex === index ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'
                     }`}>
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <FiStar className="fill-yellow-400 text-yellow-400 w-3 h-3" />
-                                    <span className="text-[10px] font-black text-[#222] tracking-widest">{product.rating} RATING</span>
-                                </div>
-                                <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 pr-4 font-medium italic">
-                                    "{product.description}"
-                                </p>
-                            </div>
-                            
-                            <div className="flex flex-col items-start sm:items-end shrink-0">
-                                <span className="text-xl font-serif font-black text-[#007074] mb-3">
-                                    Rs. {product.price.toLocaleString()}
-                                </span>
-                                <button className="flex items-center justify-center gap-2 bg-[#222] text-white px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-[#007074] transition-all duration-300 shadow-lg active:scale-95">
-                                    <FiShoppingBag size={14} />
-                                    <span>Add to Cart</span>
-                                </button>
-                            </div>
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <FiStar className="fill-yellow-400 text-yellow-400 w-3 h-3" />
+                          <span className="text-[10px] font-black text-[#222] tracking-widest">{product.rating} RATING</span>
                         </div>
+                        <p className="text-gray-500 text-xs leading-relaxed line-clamp-2 pr-4 font-medium italic">
+                          "{product.description}"
+                        </p>
+                      </div>
+
+                      <div className="flex flex-col items-start lg:items-end shrink-0">
+                        <span className="text-sm sm:text-xl font-serif font-black text-[#007074] mb-3">
+                          Rs. {product.price.toLocaleString()}
+                        </span>
+                        <button className="flex items-center justify-center gap-2 bg-[#222] text-white py-1.5 px-4 sm:px-6 sm:py-2.5 rounded-full text-[10px] sm:font-black sm:uppercase tracking-[0.2em] hover:bg-[#007074] transition-all duration-300 shadow-lg active:scale-95">
+                          <FiShoppingBag size={14} />
+                          <span>Add to Cart</span>
+                        </button>
+                      </div>
                     </div>
+                  </div>
                 </div>
-                ))}
+              ))}
             </div>
           </div>
 
+        </div>
+        {/* Global CTA */}
+        <div className="mt-6 text-center mx-auto items-center justify-center lg:flex hidden sm:mt-12">
+          <Link
+            to="/category"
+            className="inline-flex justify-center items-center sm:gap-3 text-[11px] sm:font-black uppercase tracking-[0.3em] text-[#222] hover:text-[#007074] transition-all group"
+          >
+            View Full Collection
+            <div className="w-8 h-[1px] bg-gray-200 group-hover:w-12 group-hover:bg-[#007074] transition-all duration-500" />
+            <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
+          </Link>
         </div>
       </div>
     </section>

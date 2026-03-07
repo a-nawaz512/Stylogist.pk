@@ -35,7 +35,7 @@ export default function DealsOfDay() {
             salePrice: 15400,
             rating: 5.0,
             soldStock: 92,
-            image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1974&auto=format&fit=crop",
+            image: "https://img.freepik.com/free-photo/blond-female-dancing-long-red-dress_613910-6982.jpg?ga=GA1.1.2142144714.1772005373&semt=ais_hybrid&w=740&q=80",
         },
         {
             id: 504,
@@ -69,19 +69,19 @@ export default function DealsOfDay() {
     const { hrs, mins, secs } = formatTime(timeLeft);
 
     return (
-        <section className="relative bg-[#FDFDFD] py-20 md:py-12 overflow-hidden border-t border-gray-50">
+        <section className="relative bg-[#FDFDFD] py-10 overflow-hidden border-t border-gray-50">
             {/* Scarcity Background Glow */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[#007074]/5 blur-[150px] pointer-events-none" />
 
             <div className="max-w-6xl mx-auto px-6 relative z-10">
 
                 {/* HEADER SECTION */}
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between mb-16 gap-10">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between lg:mb-16 mb:-4 gap-10">
                     <div className="text-center lg:text-left">
                         <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-[#007074]/10 text-[#007074] text-[10px] font-black tracking-[0.2em] uppercase mb-4">
                             <FiZap className="animate-pulse" /> Limited Availability
                         </div>
-                        <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tighter">
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-black text-[#222] tracking-tighter">
                             Deals of the <span className="italic text-[#007074]">Day</span>
                         </h2>
                     </div>
@@ -119,7 +119,7 @@ export default function DealsOfDay() {
                                 style={{ animationDelay: `${index * 150}ms` }}
                             >
                                 {/* Framed Luxury Image */}
-                                <div className="relative aspect-[3/4] rounded-[2rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 overflow-hidden">
+                                <div className="relative lg:aspect-[3/4] rounded-[2rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 overflow-hidden">
                                     <div className="w-full h-full bg-[#F7F3F0] rounded-[1.5rem] overflow-hidden relative">
                                         <img src={product.image} alt={product.name} className="w-full h-full object-cover mix-blend-multiply transition-transform duration-1000 group-hover:scale-110" />
                                         
@@ -178,7 +178,7 @@ export default function DealsOfDay() {
                 </div>
 
                 {/* Bottom Call to Action */}
-                <div className="mt-20 text-center">
+                <div className="mt-10 text-center">
                     <Link to="/category" className="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#222] hover:text-[#007074] transition-all group">
                         Discover All Active Deals
                         <div className="w-8 h-[1px] bg-gray-200 group-hover:w-12 group-hover:bg-[#007074] transition-all duration-500" />

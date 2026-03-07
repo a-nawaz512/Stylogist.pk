@@ -13,7 +13,7 @@ export default function NewsletterBanner() {
   `;
 
   return (
-    <section className="w-full px-6 py-8 bg-[#FDFDFD] font-sans relative overflow-hidden">
+    <section className="w-full px-6 py-3 bg-[#FDFDFD] font-sans relative overflow-hidden">
       <style>{customStyles}</style>
 
       {/* Decorative Branding Background */}
@@ -21,7 +21,7 @@ export default function NewsletterBanner() {
         Newsletter
       </div>
 
-      <div className="max-w-6xl mx-auto bg-[#222] rounded-[3rem] p-10 md:p-16 lg:p-20 flex flex-col lg:flex-row items-center justify-between gap-12 relative overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/5">
+      <div className="max-w-6xl mx-auto bg-[#222] rounded-[3rem] p-10  flex flex-col lg:flex-row items-center justify-between gap-12 relative overflow-hidden shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] border border-white/5">
         
         {/* Cinematic Glowing Background Orbs */}
         <div className="absolute top-[-20%] right-[-10%] w-96 h-96 bg-[#007074] opacity-20 blur-[120px] rounded-full pointer-events-none animate-pulse"></div>
@@ -32,11 +32,11 @@ export default function NewsletterBanner() {
           <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-white/5 text-[#007074] text-[9px] font-black tracking-[0.3em] uppercase mb-6 border border-white/10">
             <FiZap className="animate-pulse" /> Insider Access
           </div>
-          <h2 className="text-4xl md:text-6xl font-serif font-black text-white leading-[0.95] tracking-tighter drop-shadow-2xl">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-black text-white leading-[0.95] tracking-tighter drop-shadow-2xl">
             Stay ahead of <br />
             <span className="italic text-[#007074]">The Curve.</span>
           </h2>
-          <p className="text-gray-400 mt-8 text-sm md:text-base leading-relaxed uppercase tracking-widest font-medium max-w-md mx-auto lg:mx-0">
+          <p className="text-gray-400 mt-3 md:mt-8 text-[10px] lg:text-sm md:text-base leading-relaxed uppercase tracking-widest font-medium max-w-md mx-auto lg:mx-0">
             Join the Stylogist collective for early access to neural drops and exclusive editorial offers.
           </p>
         </div>
@@ -52,13 +52,13 @@ export default function NewsletterBanner() {
               <input
                 type="email"
                 placeholder="EMAIL ADDRESS"
-                className="w-full bg-white/5 border border-white/10 text-white text-[11px] font-black tracking-[0.2em] placeholder-gray-500 py-5 pl-16 pr-6 rounded-full outline-none focus:bg-white/10 focus:border-[#007074]/50 transition-all shadow-2xl"
+                className="w-full bg-white/5 border border-white/10 text-white text-[11px] font-black tracking-[0.2em] placeholder-gray-500 py-3 lg:py-5 pl-16 pr-6 rounded-full outline-none focus:bg-white/10 focus:border-[#007074]/50 transition-all shadow-2xl"
               />
             </div>
           </div>
 
           {/* Subscribe Button - Stylogist Teal Shimmer */}
-          <button className="animate-shimmer group w-full bg-[#007074] text-white font-black text-[11px] uppercase tracking-[0.3em] py-5 px-8 rounded-full transition-all duration-500 shadow-[0_15px_30px_rgba(0,112,116,0.3)] hover:shadow-[0_20px_40px_rgba(0,112,116,0.5)] hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3">
+          <button className="animate-shimmer group w-full bg-[#007074] text-white font-black text-[8px] lg:text-[11px] uppercase tracking-[0.3em] py-3 lg:py-5 px-8 rounded-full transition-all duration-500 shadow-[0_15px_30px_rgba(0,112,116,0.3)] hover:shadow-[0_20px_40px_rgba(0,112,116,0.5)] hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-3">
             Join The Collective
             <FiArrowRight className="group-hover:translate-x-1.5 transition-transform" size={16} />
           </button>

@@ -85,8 +85,8 @@ export default function FeaturedProducts() {
       style={{ animationDelay: `${index * 100}ms` }}
     >
       {/* Framed Image Container */}
-      <div className="relative aspect-[3/4] rounded-[2rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 overflow-hidden">
-        <div className="w-full h-full bg-[#F7F3F0] rounded-[1.5rem] overflow-hidden relative">
+      <div className="relative aspect-[6/4] sm:aspect-[3/4] sm:rounded-[2rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 overflow-hidden">
+        <div className="w-full h-full bg-[#F7F3F0] rounded-md sm:rounded-[1.5rem] overflow-hidden relative">
           <Link to={`/product/${product.id}`} className="block w-full h-full">
             <img
               src={product.image}
@@ -150,26 +150,26 @@ export default function FeaturedProducts() {
   );
 
   return (
-    <section className="w-full bg-[#FDFDFD] py-16 md:py-24 overflow-hidden relative">
+    <section className="w-full bg-[#FDFDFD] py-10 overflow-hidden relative">
       {/* Premium Background Accent */}
       <div className="absolute top-0 left-0 w-full h-full bg-[#F7F3F0]/30 pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10 max-w-6xl">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-6 sm:mb-10 gap-8">
           <div className="text-center md:text-left">
             <div className="inline-block bg-[#007074]/10 text-[#007074] text-[10px] font-black px-3 py-1 rounded-full mb-4 uppercase tracking-[0.2em]">
               Curated Selection
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tight">
+            <h2 className="text-2xl md:text-5xl font-serif font-black text-[#222] tracking-tight">
               Featured <span className="italic text-[#007074]">Collection</span>
             </h2>
-            <p className="text-gray-400 mt-5 max-w-lg text-sm leading-relaxed uppercase tracking-wide font-medium">
+            <p className="text-gray-400 mt-2 sm:mt-5 max-w-lg text-sm sm:leading-relaxed sm:uppercase tracking-wide font-medium">
               Handpicked arrivals designed to elevate your everyday ritual.
             </p>
           </div>
 
-          <div className="flex items-center justify-center space-x-3">
+          <div className="sm:flex hidden items-center justify-center space-x-3">
             <button
               onClick={() => setDesktopPage((prev) => (prev === 0 ? totalDesktopPages - 1 : prev - 1))}
               className="w-12 h-12 flex items-center justify-center cursor-pointer rounded-full border border-gray-100 bg-white text-[#222] hover:bg-[#222] hover:text-white transition-all duration-500 shadow-sm hover:shadow-xl"
@@ -199,7 +199,7 @@ export default function FeaturedProducts() {
           <div className="max-w-[280px] mx-auto transition-all duration-700">
              <ProductCard product={featuredProducts[mobileIndex]} index={0} />
           </div>
-          <div className="flex items-center justify-center gap-3 mt-10">
+          <div className="flex items-center justify-center gap-3 mt-6">
             {featuredProducts.map((_, index) => (
               <button
                 key={index}
@@ -213,7 +213,7 @@ export default function FeaturedProducts() {
         </div>
 
         {/* Bottom CTA */}
-        <div className="text-center mt-16">
+        <div className="text-center mt-8">
           <Link
             to="/category"
             className="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#222] hover:text-[#007074] transition-all group"

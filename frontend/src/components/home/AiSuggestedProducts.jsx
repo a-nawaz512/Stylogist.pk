@@ -37,7 +37,7 @@ export default function AiSuggestedProducts() {
   };
 
   return (
-    <section className="w-full bg-[#FDFDFD] py-16 md:py-24 overflow-hidden relative">
+    <section className="w-full bg-[#FDFDFD] py-10 overflow-hidden relative">
       {/* AI Pulse Background Decoration */}
       <div className="absolute top-0 left-0 w-full h-full bg-[#007074]/5 pointer-events-none" />
       
@@ -48,16 +48,16 @@ export default function AiSuggestedProducts() {
           <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-[#007074]/10 text-[#007074] text-[10px] font-black tracking-[0.2em] uppercase mb-4">
             <FiZap className="animate-pulse" /> Neural Style Pairing
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tight">
+          <h2 className="text-2xl md:text-3xl lg:text-5xl font-serif font-black text-[#222] tracking-tight">
             AI Style <span className="italic text-[#007074]">Analysis</span>
           </h2>
         </div>
 
         {/* Dashboard Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 md:gap-8 items-stretch">
           
           {/* LEFT: AI PROFILE CONSOLE */}
-          <div className="lg:col-span-4 bg-[#222] rounded-[2.5rem] p-8 md:p-10 flex flex-col relative overflow-hidden shadow-2xl border border-white/10">
+          <div className="lg:col-span-4 bg-[#222] lg:rounded-[2.5rem] p-8 md:p-10 flex flex-col relative overflow-hidden shadow-2xl border border-white/10">
             <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#007074]/30 rounded-full blur-[80px] animate-pulse"></div>
 
             <div className="relative z-10 flex-1">
@@ -125,7 +125,7 @@ export default function AiSuggestedProducts() {
               onMouseEnter={() => setHoveredProduct(curatedLook.mainPiece.id)}
               onMouseLeave={() => setHoveredProduct(null)}
             >
-              <div className="w-full h-full rounded-[2rem] overflow-hidden relative">
+              <div className="w-full h-full lg:rounded-[2rem] overflow-hidden relative">
                 <img 
                   src={curatedLook.mainPiece.image} 
                   alt={curatedLook.mainPiece.name}

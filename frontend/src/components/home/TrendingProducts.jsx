@@ -57,8 +57,8 @@ export default function TrendingProducts() {
       style={{ animationDelay: `${index * 150}ms` }}
     >
       {/* Framed Image Container */}
-      <div className="relative aspect-[3/4] rounded-[2rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 overflow-hidden">
-        <div className="w-full h-full bg-[#F7F3F0] rounded-[1.5rem] overflow-hidden relative">
+      <div className="relative aspect-[6/4] md:aspect-[4/4] lg:aspect-[3/4] rounded-[2rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 overflow-hidden">
+        <div className="w-full h-full bg-[#F7F3F0] rounded-md md:rounded-[1.5rem] overflow-hidden relative">
           <Link to={`/product/${product.id}`} className="block w-full h-full">
             <img
               src={product.image}
@@ -121,29 +121,29 @@ export default function TrendingProducts() {
   );
 
   return (
-    <section className="w-full bg-[#FDFDFD] py-16 md:py-14 overflow-hidden relative">
+    <section className="w-full bg-[#FDFDFD] py-10 overflow-hidden relative">
       {/* Soft Background Accent */}
       <div className="absolute top-0 right-0 w-[40%] h-full bg-[#007074]/5 blur-[120px] pointer-events-none" />
 
       <div className="container mx-auto px-6 relative z-10 max-w-6xl">
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 lg:mb-16 gap-8">
           <div className="text-center md:text-left">
             <div className="inline-flex items-center gap-2 py-1 px-3 rounded-full bg-[#007074]/10 text-[#007074] text-[10px] font-black tracking-[0.2em] uppercase mb-4">
               <FiTrendingUp className="animate-pulse" /> Most Wanted Now
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tight">
+            <h2 className="text-2xl lg:text-5xl font-serif font-black text-[#222] tracking-tight">
               Trending <span className="italic text-[#007074]">Right Now</span>
             </h2>
-            <p className="text-gray-400 mt-5 max-w-lg text-sm leading-relaxed uppercase tracking-wide font-medium">
+            <p className="text-gray-400 mt-5 max-w-lg text-sm lg:leading-relaxed lg:uppercase tracking-wide font-medium">
               Join the movement with our most-coveted essentials, styled by you.
             </p>
           </div>
 
-          <div className="mt-6 md:mt-0 flex justify-center">
+          <div className="lg:mt-6 md:mt-0 flex justify-center">
             <Link
               to="/category"
-              className="inline-flex items-center gap-3 text-[11px] font-black uppercase tracking-[0.3em] text-[#222] hover:text-[#007074] transition-all group pb-1 border-b border-gray-100"
+              className="inline-flex items-center gap-3 text-[9px] lg:text-[11px] font-black uppercase tracking-[0.3em] text-[#222] hover:text-[#007074] transition-all group pb-1 border-b border-gray-100"
             >
               Explore Trending
               <FiArrowRight className="group-hover:translate-x-2 transition-transform" />

@@ -30,7 +30,7 @@ export default function CoreValues() {
   ];
 
   return (
-    <section className="bg-[#FDFDFD] py-12 lg:py-16 relative overflow-hidden border-t border-gray-100">
+    <section className="bg-[#FDFDFD] py-10 relative overflow-hidden border-t border-gray-100">
       {/* Subtle Background Branding */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[15vw] font-serif font-black text-gray-50/50 pointer-events-none select-none uppercase tracking-tighter">
         Stylogist
@@ -39,26 +39,26 @@ export default function CoreValues() {
       <div className="container mx-auto px-6 relative z-10 max-w-6xl">
         
         {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-20">
+        <div className="text-center max-w-2xl mx-auto lg:mb-20">
           <div className="inline-flex items-center justify-center gap-3 mb-4">
             <div className="w-10 h-[1px] bg-[#007074]"></div>
             <span className="text-[#007074] text-[10px] font-black tracking-[0.3em] uppercase">The Stylogist Pillars</span>
             <div className="w-10 h-[1px] bg-[#007074]"></div>
           </div>
-          <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tight mb-6">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-black text-[#222] tracking-tight mb-6">
             Our Core <span className="italic text-[#007074]">Philosophy</span>
           </h2>
-          <p className="text-gray-400 text-xs font-bold uppercase tracking-widest leading-relaxed">
+          <p className="text-gray-400 text-xs font-bold lg:uppercase lg:tracking-widest leading-relaxed">
             The fundamental principles that define our commitment to excellence.
           </p>
         </div>
 
         {/* Values Grid - Refined & Minimalist */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
           {values.map((value, index) => (
             <div 
               key={value.id} 
-              className="group relative bg-white p-10 rounded-[2.5rem] border border-gray-100 transition-all duration-500 shadow-xl hover:shadow-2xl hover:-translate-y-2 flex flex-col items-center text-center overflow-hidden"
+              className="group relative bg-white p-10 lg:rounded-[2.5rem] border border-gray-100 transition-all duration-500 shadow-xl hover:shadow-2xl hover:-translate-y-2 flex flex-col items-center text-center overflow-hidden"
             >
               {/* Animated Corner Accent */}
               <div className="absolute top-0 right-0 w-16 h-16 bg-teal-50/50 rounded-bl-[2.5rem] translate-x-8 -translate-y-8 group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500 ease-out flex items-center justify-center pt-2 pr-2">

@@ -17,12 +17,14 @@ import WishlistPage from './commonpages/WishlistPage'
 import CheckoutPage from './commonpages/checkoutPage'
 import PageNotFound from './commonpages/PageNotFound'
 import UserProfile from './Dashboard/UserProfile'
+import ScrollToTop from './commonpages/ScrollToTop'
 
 
 const MainLayout = () => {
   return (
     <div>
       <Navbar />
+      <ScrollToTop/>
       <Outlet />
       <Footer />
     </div>

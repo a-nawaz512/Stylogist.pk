@@ -45,7 +45,7 @@ export default function TestimonialSlider() {
     const duplicatedReviews = [...reviews, ...reviews];
 
     return (
-        <section className="relative w-full bg-[#FDFDFD] py-20 overflow-hidden font-sans border-t border-gray-100">
+        <section className="relative w-full bg-[#FDFDFD] py-10 overflow-hidden font-sans border-t border-gray-100">
             
             {/* Background Accent Gradient */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[#007074]/5 blur-[120px] pointer-events-none" />
@@ -56,10 +56,10 @@ export default function TestimonialSlider() {
                     <div className="inline-block bg-[#007074]/10 text-[#007074] text-[10px] font-black px-3 py-1 rounded-full mb-4 uppercase tracking-[0.2em]">
                         Community Voice
                     </div>
-                    <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tight">
+                    <h2 className="text-2xl lg:text-5xl md:text-4xl font-serif font-black text-[#222] tracking-tight">
                         What People <span className="italic text-[#007074]">Say</span>
                     </h2>
-                    <p className="text-gray-400 mt-5 text-sm uppercase tracking-widest font-medium leading-relaxed">
+                    <p className="text-gray-400 mt-5 text-[12px] sm:text-sm uppercase tracking-widest font-medium leading-relaxed">
                         Discover the Stylogist experience through the eyes of our global community.
                     </p>
                 </div>
@@ -67,7 +67,7 @@ export default function TestimonialSlider() {
 
             {/* The Infinite Marquee Container */}
             <div
-                className="relative w-full flex overflow-hidden py-10 slider-container"
+                className="relative w-full flex overflow-hidden sm:py-10 slider-container"
                 style={{ 
                     maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)', 
                     WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' 

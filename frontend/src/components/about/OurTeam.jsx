@@ -30,7 +30,7 @@ export default function OurTeam() {
   ];
 
   return (
-    <section className="w-full bg-[#FDFDFD] py-20 lg:py-12 relative overflow-hidden font-sans border-t border-gray-100">
+    <section className="w-full bg-[#FDFDFD] py-10 relative overflow-hidden font-sans border-t border-gray-100">
       
       {/* Background Accent */}
       <div className="absolute top-0 right-0 w-1/2 h-full bg-[#007074]/5 blur-[120px] pointer-events-none" />
@@ -38,12 +38,12 @@ export default function OurTeam() {
       <div className="container mx-auto px-6 relative z-10 max-w-6xl">
         
         {/* Section Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-20 gap-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-8">
           <div className="text-center md:text-left">
             <div className="inline-block bg-[#007074]/10 text-[#007074] text-[10px] font-black px-3 py-1 rounded-full mb-4 uppercase tracking-[0.2em]">
                Neural Minds
             </div>
-            <h2 className="text-4xl md:text-5xl font-serif font-black text-[#222] tracking-tight">
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-serif font-black text-[#222] tracking-tight">
               Meet The <span className="italic text-[#007074]">Visionaries</span>
             </h2>
             <p className="text-gray-400 mt-6 max-w-md text-sm leading-relaxed uppercase tracking-widest font-medium">
@@ -58,7 +58,7 @@ export default function OurTeam() {
         </div>
 
         {/* Team Grid - Boutique Style */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-10">
           {teamMembers.map((member, index) => (
             <div 
               key={member.id} 
@@ -67,9 +67,9 @@ export default function OurTeam() {
             >
               
               {/* Premium Framed Image Container */}
-              <div className="relative aspect-[4/5] rounded-[2.5rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 overflow-hidden">
+              <div className="relative aspect-[4/4] lg:aspect-[4/5] rounded-md lg:rounded-[2.5rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-2xl group-hover:-translate-y-2 overflow-hidden">
                 
-                <div className="w-full h-full rounded-[2rem] overflow-hidden bg-[#F7F3F0] relative">
+                <div className="w-full h-full rounded-md lg:rounded-[2rem] overflow-hidden bg-[#F7F3F0] relative">
                   <img 
                     src={member.image} 
                     alt={member.name} 

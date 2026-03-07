@@ -86,12 +86,12 @@ export default function HomeHeader() {
                 </div>
 
                 {/* Main Title - Font Serif Black */}
-                <h1 className={`text-5xl md:text-7xl lg:text-8xl font-serif font-black text-white mb-6 tracking-tighter leading-tight drop-shadow-2xl transition-all duration-1000 delay-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+                <h1 className={`text-4xl sm:text-6xl  font-serif font-black text-white mb-6 tracking-tighter leading-tight drop-shadow-2xl transition-all duration-1000 delay-500 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
                   {slide.title.split(' ')[0]} <span className="italic text-[#007074]">{slide.title.split(' ')[1]}</span>
                 </h1>
 
                 {/* Description - Focused & Modern */}
-                <p className={`text-sm md:text-base lg:text-lg text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed uppercase tracking-widest font-medium transition-all duration-1000 delay-700 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
+                <p className={`text-sm md:text-base lg:text-lg text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed uppercase  transition-all duration-1000 delay-700 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-12'}`}>
                   {slide.description}
                 </p>
 
@@ -122,7 +122,7 @@ export default function HomeHeader() {
       })}
 
       {/* Progress & Pagination Controls */}
-      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-6">
+      <div className="absolute sm:flex hidden bottom-10 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-6">
         
         {/* Visual Progress Dots */}
         <div className="flex items-center gap-4">
