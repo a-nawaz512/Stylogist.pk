@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 // ==========================================
 const MOCK_PRODUCTS = [
   // --- ORIGINAL 6 ---
-  { id: 1, name: "Midnight Silk Wrap Dress", brand: "Stylogist Women", type: "Women", style: "Formal", price: 210, originalPrice: 250, discount: 16, rating: 4.8, image: "https://img.freepik.com/premium-photo/red-dress-leather-purse-handbag-with-dress-shelf-elegant-evening-dress-accessory-beautiful-expensive_274234-6355.jpg?ga=GA1.1.2142144714.1772005373&semt=ais_hybrid&w=740&q=80" },
+  { id: 1, name: "Midnight Silk Wrap Dress", brand: "Stylogist Women", type: "Women", style: "Formal", price: 210, originalPrice: 250, discount: 16, rating: 4.8, image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?q=80&w=1974&auto=format&fit=crop" },
   { id: 2, name: "Classic Oxford Cotton Shirt", brand: "Stylogist Men", type: "Men", style: "Formal", price: 145, originalPrice: null, rating: 4.5, image: "https://images.unsplash.com/photo-1596755094514-f87e34085b2c?q=80&w=1976&auto=format&fit=crop" },
   { id: 3, name: "Radiance Vitamin C Serum", brand: "Stylogist Beauty", type: "Beauty", style: "Skincare", price: 85, originalPrice: 110, discount: 22, rating: 5.0, image: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=1974&auto=format&fit=crop" },
   { id: 4, name: "Gold Minimalist Watch", brand: "Accessories", type: "Accessories", style: "Minimalist", price: 320, originalPrice: 350, discount: 8, rating: 4.9, image: "https://images.unsplash.com/photo-1524592094714-0f0654e20314?q=80&w=1998&auto=format&fit=crop" },

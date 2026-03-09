@@ -110,7 +110,7 @@ const route = createBrowserRouter([
     path: "/admin",
     element: <AdminLayout />,
     children: [
-      { path: '/admin/overview', element: <AdminDashboard /> },
+      { path: "dashboard", element: <AdminDashboard /> },
       { path: "analytics", element: <RevenueAnalytics /> },
       { path: "products", element: <ProductManage /> },
       { path: "categories", element: <CategoryManage /> },

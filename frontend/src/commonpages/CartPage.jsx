@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  FiMinus,
-  FiPlus,
-  FiTrash2,
-  FiArrowRight,
-  FiShield,
+import { 
+  FiMinus, 
+  FiPlus, 
+  FiTrash2, 
+  FiArrowRight, 
+  FiShield, 
   FiShoppingBag,
   FiChevronLeft,
   FiTag,
@@ -77,7 +77,7 @@ export default function CartPage() {
   };
 
   const handleRemove = (id) => setCartItems(prev => prev.filter(item => item.id !== id));
-
+  
   const handleApplyPromo = () => {
     if (promoCode.toUpperCase() === "GLOW10") {
       setDiscount(0.10); // 10% off
@@ -91,7 +91,7 @@ export default function CartPage() {
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const discountAmount = subtotal * discount;
   const subtotalAfterDiscount = subtotal - discountAmount;
-  const shipping = subtotalAfterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_COST;
+  const shipping = subtotalAfterDiscount >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING_COST; 
   const total = subtotalAfterDiscount + shipping;
   const progressToFreeShipping = Math.min((subtotalAfterDiscount / FREE_SHIPPING_THRESHOLD) * 100, 100);
 
@@ -132,32 +132,31 @@ export default function CartPage() {
   return (
     <div className="w-full min-h-screen bg-[#F7F9FA] flex flex-col items-center py-8 lg:py-16 font-sans text-[#2a2a2a] px-4 relative overflow-hidden">
       <style>{customStyles}</style>
-
+      
       {/* Decorative Blobs */}
       <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-teal-200/20 rounded-full blur-[100px] -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-      <Link to="/category" className="absolute top-0 md:top-4 left-4  flex items-center gap-1 md:text-[11px] text-[8px] font-bold text-gray-400 hover:text-[#007074] transition-colors uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full">
-        <FiChevronLeft size={14} className='text-[8px] md:text-[11px] ' /> Back to Shop
-      </Link>
+
       {/* Centered Premium Container */}
       <div className="w-full max-w-5xl bg-white rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,112,116,0.05)] border border-white overflow-hidden flex flex-col lg:flex-row z-10 animate-stagger">
-
+        
         {/* LEFT SIDE: ITEMS */}
-
         <div className="w-full lg:w-[60%] p-6 md:p-10 flex flex-col bg-white">
           <div className="flex items-center justify-between mb-8 pb-6 border-b border-gray-100">
             <div>
-              <h1 className="text-2xl md:text-[3xl] font-bold font-serif text-[#2a2a2a]">Shopping Bag</h1>
-              <p className="text-xs text-gray-400 mt-1 font-bold md:uppercase md:tracking-widest">
+              <h1 className="text-3xl font-bold font-serif text-[#2a2a2a]">Shopping Bag</h1>
+              <p className="text-xs text-gray-400 mt-1 font-bold uppercase tracking-widest">
                 <span className="text-[#007074]">{cartItems.length}</span> Essentials
               </p>
             </div>
-
+            <Link to="/shop" className="hidden md:flex items-center gap-1 text-[11px] font-bold text-gray-400 hover:text-[#007074] transition-colors uppercase tracking-widest bg-gray-50 px-4 py-2 rounded-full">
+              <FiChevronLeft size={14} /> Back to Shop
+            </Link>
           </div>
 
           <div className="flex flex-col gap-6 overflow-y-auto max-h-[50vh] pr-4 custom-scrollbar">
             {cartItems.map((item, idx) => (
-              <div
-                key={item.id}
+              <div 
+                key={item.id} 
                 className="flex items-center gap-4 group pb-6 border-b border-gray-50 last:border-0 animate-stagger"
                 style={{ animationDelay: `${idx * 100}ms` }}
               >
@@ -169,7 +168,7 @@ export default function CartPage() {
                     </div>
                   )}
                 </Link>
-
+                
                 <div className="flex flex-col flex-1 py-1">
                   <div className="flex justify-between items-start">
                     <div>
@@ -182,16 +181,16 @@ export default function CartPage() {
 
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center gap-2 bg-gray-50 rounded-full p-1 border border-gray-100 shadow-inner">
-                      <button
-                        onClick={() => handleQuantity(item.id, 'dec')}
+                      <button 
+                        onClick={() => handleQuantity(item.id, 'dec')} 
                         disabled={item.quantity <= 1}
                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${item.quantity <= 1 ? 'text-gray-300' : 'bg-white text-rose-500 shadow-sm hover:bg-rose-50'}`}
                       >
                         <FiMinus size={12} />
                       </button>
                       <span className="font-bold text-xs w-4 text-center">{item.quantity}</span>
-                      <button
-                        onClick={() => handleQuantity(item.id, 'inc')}
+                      <button 
+                        onClick={() => handleQuantity(item.id, 'inc')} 
                         disabled={item.quantity >= item.stock}
                         className={`w-7 h-7 rounded-full flex items-center justify-center transition-all ${item.quantity >= item.stock ? 'text-gray-300' : 'bg-white text-[#007074] shadow-sm hover:bg-teal-50'}`}
                       >
@@ -216,10 +215,10 @@ export default function CartPage() {
               <div className="flex gap-2">
                 <div className="relative flex-1">
                   <FiTag className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-                  <input
+                  <input 
                     type="text" value={promoCode}
                     onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="GLOW10"
+                    placeholder="GLOW10" 
                     className="w-full bg-white border border-gray-200 rounded-xl py-3 pl-9 pr-3 text-xs focus:ring-1 focus:ring-[#007074] outline-none shadow-sm transition-all"
                   />
                 </div>
@@ -256,13 +255,13 @@ export default function CartPage() {
               )}
               <div className="border-t border-gray-50 pt-4 flex justify-between items-end">
                 <span className="font-bold text-lg">Total</span>
-                <span className="font-bold text-[#007074] text-lg md:text-3xl font-serif">${total.toFixed(2)}</span>
+                <span className="font-bold text-[#007074] text-3xl font-serif">${total.toFixed(2)}</span>
               </div>
             </div>
           </div>
 
           <div>
-            <Link to="/checkout" className="w-full bg-gradient-to-r from-[#2a2a2a] to-gray-800 text-white py-2 md:py-4 rounded-full text-sm md:font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:from-[#007074] hover:to-teal-500 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
+            <Link to="/checkout" className="w-full bg-gradient-to-r from-[#2a2a2a] to-gray-800 text-white py-4 rounded-full text-sm font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:from-[#007074] hover:to-teal-500 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 shadow-lg">
               Proceed to Checkout <FiArrowRight size={18} />
             </Link>
             <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-gray-400 uppercase tracking-widest">
