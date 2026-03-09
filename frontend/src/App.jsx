@@ -27,6 +27,8 @@ import RevenueAnalytics from './AdminDashboard/pages/RevenueAnalytics'
 import CategoryManage from './AdminDashboard/pages/CategoryManage'
 import AdminSettings from './AdminDashboard/pages/AdminSettings'
 import ScrollToTop from './commonpages/ScrollToTop'
+import EnterOTP from './commonpages/OTPpage'
+import ResetPassword from './commonpages/resetPasswordPage'
 
 
 const MainLayout = () => {
@@ -98,6 +100,8 @@ const route = createBrowserRouter([
   { path: '/login', element: <Login /> },
   { path: '/signup', element: <Signup /> },
   { path: "/forgot-password", element: <ForgotPassword /> },
+  { path: "/verify-otp", element: <EnterOTP /> },
+  { path: "/reset-password", element: <ResetPassword /> },
   { path: "/profile", element: <UserProfile /> },
 
   // admin Routes

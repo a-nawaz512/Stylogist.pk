@@ -17,7 +17,7 @@ export const sendEmail = async (options) => {
     from: 'Stylogist Admin <support@stylogist.pk>',
     to: options.email,
     subject: options.subject,
-    text: options.message,
+    html: options.message,
     // html: options.html // (Optional: Add HTML template here)
   };
 

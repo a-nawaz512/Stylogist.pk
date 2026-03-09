@@ -7,7 +7,13 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true, lowercase: true, index: true },
   phone: { type: String, required: true, unique: true },
   password: { type: String, required: true, minlength: 8, select: false }, // select: false hides it from queries by default
-  role: { type: String, enum: ['User', 'Staff', 'Super Admin'], default: 'User' }
+  role: { type: String, enum: ['User', 'Staff', 'Super Admin'], default: 'User' },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  otp: String,
+  otpExpires: Date,
 }, { timestamps: true });
 
 // Composition: Pre-save hook to hash password

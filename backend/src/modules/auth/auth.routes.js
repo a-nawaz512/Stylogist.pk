@@ -1,23 +1,53 @@
 import { Router } from 'express';
 import * as authController from './auth.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
-import { registerSchema, forgotPasswordSchema, resetPasswordSchema, loginSchema } from './auth.validation.js';
 import { catchAsync } from '../../utils/catchAsync.js';
 import rateLimit from 'express-rate-limit';
 
+// Make sure to export these new schemas from your auth.validation.js file!
+import { 
+  registerSchema, 
+  loginSchema, 
+  verifyOtpSchema,     // NEW
+  requestOtpSchema,    // NEW
+  forgotPasswordSchema, 
+  resetPasswordSchema 
+} from './auth.validation.js';
+
 const router = Router();
 
-const forgotPasswordLimiter = rateLimit({
+// ========================
+// SECURITY: Rate Limiters
+// ========================
+const passwordResetLimiter = rateLimit({
     windowMs: 60 * 60 * 1000, // 1 hour window
-    max: 20, // Limit each IP to 5 forgot password requests per hour
-    message: 'Too many password reset attempts, please try again after an hour'
+    max: 10, // Limit each IP to 10 password reset requests per hour
+    message: { status: 'fail', message: 'Too many password reset attempts. Try again in an hour.' }
 });
 
-// Route composition: Intercept -> Validate -> Execute
-router.post('/register', validate(registerSchema), catchAsync(authController.register));
+const otpLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 OTP generation requests per 15 minutes
+    message: { status: 'fail', message: 'Too many OTP requests. Please wait 15 minutes to prevent spam.' }
+});
+
+// ========================
+// ROUTES: Route composition -> Intercept -> Validate -> Execute
+// ========================
+
+// 1. Account Creation & Verification Pipeline
+router.post('/register', otpLimiter, validate(registerSchema), catchAsync(authController.register));
+router.post('/verify-otp', validate(verifyOtpSchema), catchAsync(authController.verifyOTP));
+router.post('/request-otp', otpLimiter, validate(requestOtpSchema), catchAsync(authController.requestOTP));
+
+// 2. Session Management
 router.post('/login', validate(loginSchema), catchAsync(authController.login));
 router.post('/logout', catchAsync(authController.logout));
-router.post('/forgot-password', forgotPasswordLimiter, validate(forgotPasswordSchema), catchAsync(authController.forgotPassword));
-router.post('/reset-password/:token', validate(resetPasswordSchema), catchAsync(authController.resetPassword));
+
+// 3. Password Recovery Pipeline (OTP Based)
+router.post('/forgot-password', passwordResetLimiter, validate(forgotPasswordSchema), catchAsync(authController.forgotPassword));
+
+// SENIOR NOTE: Removed '/:token' from the URL. The 6-digit OTP is now passed securely in req.body.otp
+router.post('/reset-password', validate(resetPasswordSchema), catchAsync(authController.resetPassword));
 
 export default router;
