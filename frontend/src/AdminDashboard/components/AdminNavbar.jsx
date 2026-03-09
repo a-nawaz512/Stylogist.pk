@@ -6,10 +6,10 @@ export default function AdminNavbar() {
   const adminName = "Allah Nawaz";
 
   return (
-    <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 shrink-0 relative z-40">
+    <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 shrink-0 relative z-40 ">
       
       {/* 1. SMART SEARCH BAR */}
-      <div className="flex-1 max-w-xl">
+      <div className="flex-1  md:max-w-xl">
         <div className="relative group">
           <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#007074] transition-colors" size={18} />
           <input 
@@ -45,16 +45,16 @@ export default function AdminNavbar() {
         </div>
 
         {/* Admin Profile Display */}
-        <div className="flex items-center gap-3 pl-2 cursor-pointer group">
+        <div className="flex  items-center md:gap-3 pl-2 cursor-pointer group">
            <div className="text-right hidden sm:block">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Super Admin</p>
               <p className="text-xs font-bold text-slate-900">{adminName}</p>
            </div>
            <div className="relative">
-              <div className="w-10 h-10 rounded-2xl bg-[#007074] flex items-center justify-center text-white font-black shadow-lg shadow-[#007074]/20 group-hover:scale-105 transition-transform">
+              <div className="md:w-10 md:h-10 rounded-2xl p-1 bg-[#007074] flex items-center justify-center text-white font-black shadow-lg shadow-[#007074]/20 group-hover:scale-105 text-[10px] md:text-xs transition-transform">
                 {adminName.split(' ').map(n => n[0]).join('')}
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-2 w-2 md:w-3 md:h-3 bg-green-500 rounded-full border-2 border-white" />
            </div>
            <FiChevronDown className="text-slate-300 group-hover:text-slate-900 transition-colors" />
         </div>
