@@ -1,16 +1,20 @@
 import React, { useState } from 'react';
 import { FiMail, FiLock, FiEye, FiEyeOff, FiArrowRight } from 'react-icons/fi';
 import { ShieldCheck } from "lucide-react";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import ComonButton from './ComonButton';
+import { useLogin } from '../features/auth/useAuthHooks'; // Removed unused forgotPassword hook
+import toast from 'react-hot-toast';
 
 export default function Login() {
-  const navigate = useNavigate();
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
+  // 1. Initialize API Hook
+  const { mutate: login, isPending: isLoggingIn } = useLogin();
+
+  // Real-time Validation Engine
   const validate = (name, value) => {
     let error = "";
     if (name === "email" && !/\S+@\S+\.\S+/.test(value)) error = "Invalid email";
@@ -24,25 +28,16 @@ export default function Login() {
     validate(name, value);
   };
 
+  // 2. Execute Login API
   const handleLogin = (e) => {
     e.preventDefault();
-    if (!formData.email || !formData.password || Object.values(errors).some(x => x !== "")) return;
+    if (!formData.email || !formData.password || Object.values(errors).some(x => x !== "")) {
+      return toast.error("Please fix errors before submitting");
+    }
     
-    setIsSubmitting(true);
-    
-    // MERN Production Mock Login
-    setTimeout(() => {
-      const loginUser = {
-        name: "Allah Nawaz",
-        email: "nawaz51412@gmail.com",
-        avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200",
-        role: "Premium Member",
-        joined: "March 2026"
-      };
-      localStorage.setItem("user", JSON.stringify(loginUser));
-      setIsSubmitting(false);
-      navigate("/");
-    }, 1000);
+    // Fire the useLogin mutation
+    // This securely sends credentials to your backend and bakes the httpOnly cookie!
+    login({ email: formData.email, password: formData.password });
   };
 
   return (
@@ -132,25 +127,31 @@ export default function Login() {
                 </div>
                 {errors.password && <p className="text-[10px] font-black text-red-500 uppercase ml-1 absolute -bottom-4">{errors.password}</p>}
               </div>
-                <div className="flex justify-between items-center mb-1 px-1">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-transparent select-none">Spacer</label>
-                  <Link to="/forgot-password" className="text-[11px] font-bold text-[#007074] uppercase tracking-wider hover:underline">
-                    Forgot Password?
-                  </Link>
-                </div>
+
+              {/* EXACT ORIGINAL LAYOUT KEPT HERE */}
+              <div className="flex justify-between items-center mb-1 px-1">
+                <label className="text-[10px] font-black uppercase tracking-widest text-transparent select-none">Spacer</label>
+               <Link to="/forgot-password"> <button 
+                  type="button"
+                 
+                  className="text-[11px] font-bold text-[#007074] uppercase tracking-wider hover:underline disabled:opacity-50"
+                >
+                  Forgot Password?
+                </button></Link>
+              </div>
 
               {/* Added top margin to account for absolute error text if needed, maintaining identical button spacing to signup */}
               <div className="pt-2">
                  <ComonButton
-                   btntitle={isSubmitting ? "Authenticating..." : "Sign In"}
+                   btntitle={isLoggingIn ? "Authenticating..." : "Sign In"}
                    padding="py-3.5"
                    icon={<FiArrowRight />}
-                   disabled={isSubmitting}
+                   disabled={isLoggingIn}
                  />
               </div>
             </form>
 
-            {/* OR DIVIDER & SOCIAL LOGIN */}
+            {/* OR DIVIDER & SOCIAL LOGIN RESTORED */}
             <div className="mt-8">
               <div className="relative flex items-center justify-center mb-5">
                 <div className="w-full border-t border-slate-200"></div>

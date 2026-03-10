@@ -1,16 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { FiArrowRight, FiArrowLeft, FiRefreshCw } from 'react-icons/fi';
 import { ShieldCheck } from "lucide-react";
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import ComonButton from './ComonButton';
+import { useVerifyOTP, useRequestOTP } from '../features/auth/useAuthHooks';
+import toast from 'react-hot-toast';
 
 export default function EnterOTP() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [otp, setOtp] = useState(new Array(6).fill(""));
-  const [activeOTPIndex, setActiveOTPIndex] = useState(0);
+  // const [activeOTPIndex, setActiveOTPIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timer, setTimer] = useState(30);
   const inputRef = useRef([]);
+
+  const email = location.state?.email;
+  const flow = location.state?.flow || 'registration';
+
+
+  const { mutate: verifyOTP, isPending: isVerifying } = useVerifyOTP();
+  const { mutate: resendOTP } = useRequestOTP();
 
   // Auto-focus the first input on load
   useEffect(() => {
@@ -56,7 +66,7 @@ export default function EnterOTP() {
       if (index < 6) newOtp[index] = char;
     });
     setOtp(newOtp);
-    
+
     // Focus the last filled input
     const focusIndex = pastedArray.length < 6 ? pastedArray.length : 5;
     inputRef.current[focusIndex]?.focus();
@@ -67,28 +77,35 @@ export default function EnterOTP() {
     const otpValue = otp.join("");
     if (otpValue.length < 6) return;
 
-    setIsSubmitting(true);
-    
-    // MERN Mock Verification
-    console.log("Verifying OTP:", otpValue);
-    setTimeout(() => {
-      setIsSubmitting(false);
-      // Navigate to Reset Password or Dashboard depending on flow
-      navigate("/reset-password"); 
-    }, 1500);
+    // 3. Dynamic logic based on flow
+    if (flow === 'registration') {
+      verifyOTP({ email, otp: otpValue });
+      // Note: On success, the hook handles the redirect to '/'
+    }
+    else if (flow === 'reset') {
+      // For reset, we don't log them in yet, we just verify the code
+      // and move them to the final password reset form
+      verifyOTP({ email, otp: otpValue }, {
+        onSuccess: (data) => {
+          // If reset flow, move to password change page with the email/otp context
+          navigate('/reset-password', { state: { email, otp: otpValue } });
+        }
+      });
+    }
   };
 
   const handleResend = () => {
     setTimer(30);
     setOtp(new Array(6).fill(""));
     inputRef.current[0]?.focus();
-    console.log("Resending OTP API trigger...");
-  };
 
+    // Trigger the resend hook
+    resendOTP({ email });
+  };
   return (
     // Strict Screen Lock: Matches Login/Signup exactly
     <div className="h-screen w-full flex items-center justify-center bg-[#F9FAFB] overflow-hidden p-4 sm:p-6 font-sans">
-      
+
       {/* Scaled Inner Container */}
       <div className="flex flex-col lg:flex-row w-full max-w-6xl h-full max-h-[850px] bg-white shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] rounded-3xl sm:rounded-[2.5rem] overflow-hidden">
 
@@ -128,10 +145,10 @@ export default function EnterOTP() {
           </div>
 
           <div className="w-full max-w-md mx-auto">
-            
+
             <header className="mb-8 text-center lg:text-left">
               <div className="w-12 h-12 bg-teal-50 text-[#007074] rounded-2xl flex items-center justify-center mb-6 mx-auto lg:mx-0 shadow-inner">
-                 <ShieldCheck size={24} />
+                <ShieldCheck size={24} />
               </div>
               <h2 className="text-3xl font-black text-slate-900 tracking-tight">Enter Secure Code</h2>
               <p className="text-slate-500 text-sm font-medium mt-2 leading-relaxed">
@@ -140,7 +157,7 @@ export default function EnterOTP() {
             </header>
 
             <form onSubmit={handleVerify} className="space-y-8">
-              
+
               {/* High-Contrast OTP Grid */}
               <div className="flex justify-between items-center gap-2 sm:gap-3">
                 {otp.map((data, index) => (
@@ -170,15 +187,15 @@ export default function EnterOTP() {
 
             {/* Resend Logic & Navigation */}
             <div className="mt-8 flex flex-col items-center justify-center gap-6">
-              
+
               {timer > 0 ? (
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest cursor-not-allowed">
                   Resend code in <span className="text-slate-900">00:{timer.toString().padStart(2, '0')}</span>
                 </p>
               ) : (
-                <button 
+                <button
                   onClick={handleResend}
-                  className="flex items-center gap-2 text-xs font-bold text-[#007074] uppercase tracking-widest hover:text-[#005a5d] transition-colors"
+                  className=" cursor-pointer flex items-center gap-2 text-xs font-bold text-[#007074] uppercase tracking-widest hover:text-[#005a5d] transition-colors"
                 >
                   <FiRefreshCw className="animate-spin-slow" /> Resend Code Now
                 </button>

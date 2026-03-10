@@ -1,15 +1,25 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { FiMail, FiArrowLeft, FiZap, FiChevronRight } from "react-icons/fi";
+import { useForgotPassword } from "../features/auth/useAuthHooks"; // IMPORT HOOK
+import toast from "react-hot-toast";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [isFocused, setIsFocused] = useState(false);
 
+  // 1. Initialize Forgot Password Hook
+  const { mutate: forgotPassword, isPending } = useForgotPassword();
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email) return;
-    console.log("Authorization link dispatched to:", email);
+    if (!email) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    
+    // 2. Trigger the real API (this will navigate to /verify-otp on success)
+    forgotPassword({ email });
   };
 
   return (
@@ -50,7 +60,7 @@ export default function ForgotPassword() {
                 {/* Active Focus Glow */}
                 <div className={`absolute inset-0 bg-[#007074] rounded-xl blur-md opacity-0 transition-opacity duration-500 ${isFocused ? 'opacity-10' : ''}`} />
                 
-                <FiMail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 z-10 ${isFocused ? 'text-[#007074]' : 'text-gray-300'}`} size={16} />
+                <FiMail className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors duration-300 z-20 pointer-events-none ${isFocused ? 'text-[#007074]' : 'text-gray-300'}`} size={16} />
                 
                 <input
                   type="email"
@@ -68,9 +78,10 @@ export default function ForgotPassword() {
 
             <button
               type="submit"
-              className="group w-full bg-[#222] text-white py-4 rounded-full font-black uppercase tracking-[0.2em] text-[10px] hover:bg-[#007074] shadow-lg hover:shadow-[#007074]/30 transition-all duration-500 active:scale-95 flex items-center justify-center gap-2"
+              disabled={isPending}
+              className="group w-full bg-[#222] text-white py-4 rounded-full font-black uppercase tracking-[0.2em] text-[10px] hover:bg-[#007074] shadow-lg hover:shadow-[#007074]/30 transition-all duration-500 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              Dispatch Link
+              {isPending ? "Sending OTP..." : "Request OTP"}
               <FiChevronRight className="group-hover:translate-x-1 transition-transform" />
             </button>
           </form>
@@ -89,7 +100,7 @@ export default function ForgotPassword() {
               to="/signup"
               className="text-[9px] font-black uppercase tracking-[0.1em] text-gray-400 hover:text-[#222] transition-colors"
             >
-              Establish <span className="text-[#007074]">Account</span>
+              Create <span className="text-[#007074]">Account</span>
             </Link>
           </div>
         </div>

@@ -4,7 +4,7 @@ import { ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import ComonButton from './ComonButton';
 import { useSignup } from '../features/auth/useAuthHooks';
-
+import { useLocation } from 'react-router-dom';
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -16,6 +16,13 @@ export default function Signup() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { mutate: signup, isPending, isError, error } = useSignup();
+
+  // ...
+  const location = useLocation();
+  const email = location.state?.email;
+
+  console.log("email", email);
+
 
   // Real-time Validation Engine
   const validate = (name, value) => {

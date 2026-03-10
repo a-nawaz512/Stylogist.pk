@@ -3,15 +3,16 @@ import * as authController from './auth.controller.js';
 import { validate } from '../../middlewares/validate.middleware.js';
 import { catchAsync } from '../../utils/catchAsync.js';
 import rateLimit from 'express-rate-limit';
+import { authMiddleware } from '../../middlewares/auth.middleware.js';
 
 // Make sure to export these new schemas from your auth.validation.js file!
-import { 
-  registerSchema, 
-  loginSchema, 
-  verifyOtpSchema,     // NEW
-  requestOtpSchema,    // NEW
-  forgotPasswordSchema, 
-  resetPasswordSchema 
+import {
+    registerSchema,
+    loginSchema,
+    verifyOtpSchema,     // NEW
+    requestOtpSchema,    // NEW
+    forgotPasswordSchema,
+    resetPasswordSchema
 } from './auth.validation.js';
 
 const router = Router();
@@ -42,12 +43,12 @@ router.post('/request-otp', otpLimiter, validate(requestOtpSchema), catchAsync(a
 
 // 2. Session Management
 router.post('/login', validate(loginSchema), catchAsync(authController.login));
-router.post('/logout', catchAsync(authController.logout));
+router.post('/logout', authMiddleware, catchAsync(authController.logout));
 
 // 3. Password Recovery Pipeline (OTP Based)
 router.post('/forgot-password', passwordResetLimiter, validate(forgotPasswordSchema), catchAsync(authController.forgotPassword));
 
 // SENIOR NOTE: Removed '/:token' from the URL. The 6-digit OTP is now passed securely in req.body.otp
-router.post('/reset-password', validate(resetPasswordSchema), catchAsync(authController.resetPassword));
+router.post('/reset-password', authMiddleware, validate(resetPasswordSchema), catchAsync(authController.resetPassword));
 
 export default router;

@@ -3,13 +3,17 @@ import { FiLock, FiEye, FiEyeOff, FiArrowRight, FiCheckCircle, FiArrowLeft } fro
 import { ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from 'react-router-dom';
 import ComonButton from './ComonButton';
+import { useResetPassword } from '../features/auth/useAuthHooks'; // IMPORT API HOOK
+import toast from 'react-hot-toast'; // FOR ERROR ALERTS
 
 export default function ResetPassword() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({ password: '', confirmPassword: '' });
   const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // 1. Initialize API Hook (maps isPending directly to your existing isSubmitting variable)
+  const { mutate: resetPassword, isPending: isSubmitting } = useResetPassword();
 
   // Real-time Validation Engine
   const validate = (name, value) => {
@@ -34,18 +38,19 @@ export default function ResetPassword() {
     }
   };
 
+  // 2. Execute Reset Password API
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.password || !formData.confirmPassword || Object.values(errors).some(x => x !== "")) return;
+    if (!formData.password || !formData.confirmPassword || Object.values(errors).some(x => x !== "")) {
+        return toast.error("Please fix the errors before submitting");
+    }
     
-    setIsSubmitting(true);
-    
-    // MERN Production Mock - Password Update
-    console.log("Dispatching new password to backend...");
-    setTimeout(() => {
-      setIsSubmitting(false);
-      navigate("/login"); // Redirect to login upon success
-    }, 1500);
+    // Fire the useResetPassword mutation
+    // The httpOnly cookie established during OTP verification handles the authentication automatically!
+    resetPassword({ 
+        password: formData.password, 
+        confirmPassword: formData.confirmPassword 
+    });
   };
 
   return (

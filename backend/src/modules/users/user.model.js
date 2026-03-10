@@ -14,6 +14,8 @@ const userSchema = new mongoose.Schema({
   },
   otp: String,
   otpExpires: Date,
+  passwordResetToken: String,
+  passwordResetExpires: Date,
 }, { timestamps: true });
 
 // Composition: Pre-save hook to hash password
