@@ -159,7 +159,7 @@ export default function CategoryPage() {
                     </button>
 
                     {/* Quick Add Button */}
-                    <div className="absolute bottom-4 left-4 right-4 translate-y-12 group-hover:translate-y-0 transition-all duration-500">
+                    <div className="absolute bottom-4 left-4 right-4 translate-y-16 group-hover:translate-y-0 transition-all duration-500">
                       <button className="w-full bg-[#222]/95 backdrop-blur-md text-white py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-[#007074] shadow-xl">
                         <FiShoppingCart size={14} /> Quick Add
                       </button>

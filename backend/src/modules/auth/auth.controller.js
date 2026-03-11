@@ -365,7 +365,7 @@ export const requestOTP = async (req, res, next) => {
 
   try {
    await sendEmail({
-      email: newUser.email,
+      email: user.email,
       subject: "Stylogist - Your Verification Code",
       message: `
   <div style="background:#f9fafb;padding:15px;font-family:Arial,Helvetica,sans-serif">

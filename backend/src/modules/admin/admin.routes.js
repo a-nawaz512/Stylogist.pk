@@ -25,7 +25,7 @@ router.post('/logout', catchAsync(adminController.adminLogout));
 // Super Admin creates new Staff/Admin
 router.post(
   '/create-admin',
-  restrictTo('Super Admin'),
+  restrictTo('Super Admin' || "Staff"),
   validate(createAdminSchema),
   catchAsync(adminController.createAdmin)
 );

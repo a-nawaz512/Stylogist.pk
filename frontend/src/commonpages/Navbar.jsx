@@ -151,7 +151,7 @@ export default function Navbar() {
                      
                       {user?.role == "Super Admin" ?
 
-                        <Link to="/admin/dashboard" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-teal-50 text-gray-600 hover:text-[#007074] transition-all">
+                        <Link to="/admin/overview" className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-teal-50 text-gray-600 hover:text-[#007074] transition-all">
                           <FiPackage size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Admin Panel</span>
                         </Link>
                         :
