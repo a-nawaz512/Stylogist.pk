@@ -26,10 +26,10 @@ export const createSendToken = (user, statusCode, res) => {
     // Convert '7d' string (or similar) to milliseconds for the cookie expiration
     // Assuming env.jwtExpiresIn is passed in a way that aligns with this, 
     // but hardcoding the math here ensures the cookie dies when the token dies.
-    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     httpOnly: true, // Absolutely critical: prevents XSS token theft
-    secure: env.nodeEnv === 'production', // Send only over HTTPS in production
-    sameSite: env.nodeEnv === 'production' ? 'none' : 'lax' // Prevents CSRF attacks
+    secure: true,   // Send only over HTTPS in production
+    sameSite: 'none'  // Prevents CSRF attacks
   };
 
   // Attach the cookie to the response layout
