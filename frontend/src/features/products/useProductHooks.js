@@ -25,6 +25,17 @@ export const useProduct = (slug) => {
     });
 };
 
+export const useProductById = (id) => {
+    return useQuery({
+        queryKey: [...PRODUCTS_KEY, 'id', id],
+        queryFn: async () => {
+            const { data } = await axiosClient.get(`/products/id/${id}`);
+            return data.data;
+        },
+        enabled: !!id,
+    });
+};
+
 export const useCreateProduct = () => {
     const qc = useQueryClient();
     return useMutation({
@@ -38,6 +49,23 @@ export const useCreateProduct = () => {
         },
         onError: (error) => {
             toast.error(error.response?.data?.message || 'Failed to create product');
+        },
+    });
+};
+
+export const useUpdateProduct = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, payload }) => {
+            const { data } = await axiosClient.patch(`/products/${id}`, payload);
+            return data.data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: PRODUCTS_KEY });
+            toast.success('Product updated');
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to update product');
         },
     });
 };

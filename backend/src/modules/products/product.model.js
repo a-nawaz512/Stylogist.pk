@@ -24,8 +24,17 @@ const productSchema = new mongoose.Schema(
 
     shortDescription: String,
 
-    keywords: [String],
-    tags: [String],
+    metaTitle: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    metaDescription: {
+      type: String,
+      trim: true,
+      default: "",
+    },
 
     category: {
       type: mongoose.Schema.Types.ObjectId,
@@ -104,6 +113,6 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-productSchema.index({ name: "text", tags: "text", keywords: "text" });
+productSchema.index({ name: "text", metaTitle: "text", metaDescription: "text" });
 
 export const Product = mongoose.model("Product", productSchema);

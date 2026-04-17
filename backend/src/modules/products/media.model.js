@@ -14,6 +14,38 @@ const mediaSchema = new mongoose.Schema(
             required: true,
         },
 
+        filename: {
+            type: String,
+            default: "",
+        },
+
+        slug: {
+            type: String,
+            default: "",
+            index: true,
+        },
+
+        metaTitle: {
+            type: String,
+            default: "",
+        },
+
+        metaDescription: {
+            type: String,
+            default: "",
+        },
+
+        alt: {
+            type: String,
+            default: "",
+        },
+
+        isThumbnail: {
+            type: Boolean,
+            default: false,
+            index: true,
+        },
+
         type: {
             type: String,
             enum: ["image", "video"],

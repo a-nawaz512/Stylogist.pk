@@ -25,8 +25,41 @@ const aggregateFromVariants = (variants) => {
   };
 };
 
+const buildMediaDocs = ({ thumbnail, media = [], productId, productSlug, metaTitle, metaDescription }) => {
+  const docs = [];
+  if (thumbnail?.url) {
+    docs.push({
+      product: productId,
+      url: thumbnail.url,
+      filename: thumbnail.filename || "",
+      slug: thumbnail.slug || `${productSlug}-thumbnail`,
+      metaTitle: thumbnail.metaTitle || metaTitle || "",
+      metaDescription: thumbnail.metaDescription || metaDescription || "",
+      alt: thumbnail.alt || metaTitle || "",
+      isThumbnail: true,
+      type: thumbnail.type || "image",
+      position: 0,
+    });
+  }
+  media.forEach((m, idx) => {
+    docs.push({
+      product: productId,
+      url: m.url,
+      filename: m.filename || "",
+      slug: m.slug || `${productSlug}-image-${idx + 1}`,
+      metaTitle: m.metaTitle || metaTitle || "",
+      metaDescription: m.metaDescription || metaDescription || "",
+      alt: m.alt || metaTitle || "",
+      isThumbnail: false,
+      type: m.type || "image",
+      position: m.position ?? idx + 1,
+    });
+  });
+  return docs;
+};
+
 export const createProduct = async (payload) => {
-  const { variants, media = [], category, brand, subCategory, name, slug, ...rest } = payload;
+  const { variants, media = [], thumbnail, category, brand, subCategory, name, slug, metaTitle = "", metaDescription = "", ...rest } = payload;
 
   if (!isValidObjectId(category)) throw new ApiError(400, "Invalid category id");
   const categoryDoc = await Category.findById(category);
@@ -55,14 +88,14 @@ export const createProduct = async (payload) => {
     ...rest,
     name,
     slug: productSlug,
+    metaTitle,
+    metaDescription,
     category,
     subCategory: subCategory || undefined,
     brand: brand || undefined,
     ...aggregates,
   });
 
-  // Fill in missing SKUs from the product context so admins don't have to
-  // hand-roll codes. The unique index on Variant.sku will still catch true dupes.
   const variantDocs = variants.map((v) => {
     const sku =
       v.sku?.trim() ||
@@ -78,7 +111,6 @@ export const createProduct = async (payload) => {
   try {
     await Variant.insertMany(variantDocs, { ordered: true });
   } catch (err) {
-    // Roll back the product if variants fail — otherwise we'd leave an orphan.
     await Product.findByIdAndDelete(product._id);
     if (err?.code === 11000) {
       throw new ApiError(409, "Duplicate variant SKU. Please provide unique SKUs or let the system generate them.");
@@ -86,13 +118,131 @@ export const createProduct = async (payload) => {
     throw err;
   }
 
-  if (media.length) {
-    const mediaDocs = media.map((m, idx) => ({
-      ...m,
-      position: m.position ?? idx,
-      product: product._id,
-    }));
-    await ProductMedia.insertMany(mediaDocs);
+  const mediaDocs = buildMediaDocs({
+    thumbnail,
+    media,
+    productId: product._id,
+    productSlug,
+    metaTitle,
+    metaDescription,
+  });
+  if (mediaDocs.length) await ProductMedia.insertMany(mediaDocs);
+
+  return getProductById(product._id);
+};
+
+export const updateProduct = async (id, payload) => {
+  if (!isValidObjectId(id)) throw new ApiError(400, "Invalid product id");
+
+  const product = await Product.findById(id);
+  if (!product) throw new ApiError(404, "Product not found");
+
+  const {
+    variants,
+    media,
+    thumbnail,
+    category,
+    brand,
+    subCategory,
+    name,
+    slug,
+    metaTitle,
+    metaDescription,
+    ...rest
+  } = payload;
+
+  if (category) {
+    if (!isValidObjectId(category)) throw new ApiError(400, "Invalid category id");
+    const categoryDoc = await Category.findById(category);
+    if (!categoryDoc) throw new ApiError(404, "Category not found");
+    product.category = category;
+  }
+
+  if (brand !== undefined) {
+    if (brand === null || brand === "") {
+      product.brand = undefined;
+    } else {
+      if (!isValidObjectId(brand)) throw new ApiError(400, "Invalid brand id");
+      const brandDoc = await Brand.findById(brand);
+      if (!brandDoc) throw new ApiError(404, "Brand not found");
+      product.brand = brand;
+    }
+  }
+
+  if (subCategory !== undefined) {
+    if (subCategory === null || subCategory === "") {
+      product.subCategory = undefined;
+    } else {
+      if (!isValidObjectId(subCategory)) throw new ApiError(400, "Invalid sub-category id");
+      const subCatDoc = await Category.findById(subCategory);
+      if (!subCatDoc) throw new ApiError(404, "Sub-category not found");
+      product.subCategory = subCategory;
+    }
+  }
+
+  if (name !== undefined) product.name = name;
+
+  // Slug remains the same on update unless explicitly changed to a different
+  // value. Empty string / same value = keep existing slug untouched.
+  if (slug && slug.trim() && slug.trim() !== product.slug) {
+    product.slug = await generateUniqueSlug(Product, slug.trim(), id);
+  }
+
+  if (metaTitle !== undefined) product.metaTitle = metaTitle;
+  if (metaDescription !== undefined) product.metaDescription = metaDescription;
+
+  Object.entries(rest).forEach(([key, value]) => {
+    if (value !== undefined) product[key] = value;
+  });
+
+  if (Array.isArray(variants) && variants.length) {
+    const aggregates = aggregateFromVariants(variants);
+    product.minPrice = aggregates.minPrice;
+    product.maxPrice = aggregates.maxPrice;
+    product.totalStock = aggregates.totalStock;
+    product.discountPercentage = aggregates.discountPercentage;
+  }
+
+  await product.save();
+
+  if (Array.isArray(variants) && variants.length) {
+    const categoryDoc = await Category.findById(product.category);
+    const brandDoc = product.brand ? await Brand.findById(product.brand) : null;
+    await Variant.deleteMany({ product: product._id });
+    const variantDocs = variants.map((v) => {
+      const sku =
+        v.sku?.trim() ||
+        generateVariantSku({
+          brandName: brandDoc?.name,
+          categoryName: categoryDoc?.name,
+          productSlug: product.slug,
+          attrs: [v.color, v.size].filter(Boolean),
+        });
+      return { ...v, sku, product: product._id };
+    });
+    try {
+      await Variant.insertMany(variantDocs, { ordered: true });
+    } catch (err) {
+      if (err?.code === 11000) {
+        throw new ApiError(409, "Duplicate variant SKU. Please provide unique SKUs or let the system generate them.");
+      }
+      throw err;
+    }
+  }
+
+  // Media arrays are authoritative when provided: the client sends the final
+  // desired set, we replace. Undefined => leave media untouched.
+  if (Array.isArray(media) || thumbnail !== undefined) {
+    await ProductMedia.deleteMany({ product: product._id });
+    const mediaDocs = buildMediaDocs({
+      thumbnail: thumbnail || null,
+      media: Array.isArray(media) ? media : [],
+      productId: product._id,
+      productSlug: product.slug,
+      metaTitle: product.metaTitle,
+      metaDescription: product.metaDescription,
+    });
+    if (mediaDocs.length) await ProductMedia.insertMany(mediaDocs);
   }
 
   return getProductById(product._id);
@@ -116,9 +266,6 @@ export const getAllProducts = async (query = {}) => {
   } = query;
 
   const filter = {};
-  // `status=all` (typically from the admin UI) means "don't filter by status".
-  // Anything else unrecognized falls through to the safe default so the
-  // storefront can't accidentally leak drafts.
   if (status === "draft" || status === "published") {
     filter.status = status;
   } else if (status !== "all") {
@@ -167,14 +314,12 @@ export const getAllProducts = async (query = {}) => {
     Product.countDocuments(filter),
   ]);
 
-  // Product media lives in a separate collection. Attach the first image per
-  // product so list views (category page, admin table) don't have to fan out
-  // an extra request per card.
   if (items.length) {
     const ids = items.map((p) => p._id);
+    // Prefer the thumbnail for list cards; fall back to the first gallery image.
     const mediaRows = await ProductMedia.aggregate([
       { $match: { product: { $in: ids }, type: "image" } },
-      { $sort: { position: 1, createdAt: 1 } },
+      { $sort: { isThumbnail: -1, position: 1, createdAt: 1 } },
       { $group: { _id: "$product", url: { $first: "$url" } } },
     ]);
     const byProduct = new Map(mediaRows.map((m) => [m._id.toString(), m.url]));
@@ -197,7 +342,7 @@ export const getProductById = async (id) => {
   if (!product) throw new ApiError(404, "Product not found");
   const [variants, media] = await Promise.all([
     Variant.find({ product: product._id }).lean(),
-    ProductMedia.find({ product: product._id }).sort({ position: 1 }).lean(),
+    ProductMedia.find({ product: product._id }).sort({ isThumbnail: -1, position: 1 }).lean(),
   ]);
   return { product, variants, media };
 };
@@ -210,7 +355,7 @@ export const getProductBySlug = async (slug) => {
   if (!product) throw new ApiError(404, "Product not found");
   const [variants, media] = await Promise.all([
     Variant.find({ product: product._id }).lean(),
-    ProductMedia.find({ product: product._id }).sort({ position: 1 }).lean(),
+    ProductMedia.find({ product: product._id }).sort({ isThumbnail: -1, position: 1 }).lean(),
   ]);
   return { product, variants, media };
 };

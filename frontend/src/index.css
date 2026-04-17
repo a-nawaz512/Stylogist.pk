@@ -1,1 +1,170 @@
 @import "tailwindcss";
+
+/* ProductManage.css or index.css */
+.ql-container.ql-snow {
+  border: none !important; /* We use the parent div for the border */
+  min-height: 180px;
+  font-size: 0.875rem; /* Matches your text-sm */
+}
+
+.ql-toolbar.ql-snow {
+  border: none !important;
+  border-bottom: 1px solid #e2e8f0 !important; /* slate-200 */
+  background-color: #f8fafc; /* slate-50 */
+}
+.ql-container.ql-snow {
+  min-height: 300px; /* Increased height for better editing */
+  font-size: 14px;
+}
+
+.ql-editor {
+  line-height: 1.6;
+}
+
+/* Images inserted via the toolbar should fill the editor width. */
+.ql-editor img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 12px 0;
+  border-radius: 6px;
+}
+
+/* This makes the dropdowns (Color/Font) look better in Tailwind projects */
+.ql-snow .ql-picker {
+  color: #475569; /* slate-600 */
+}
+/* Fix for disappearing Quill dropdowns in Tailwind/Vite */
+
+/* 1. Ensure the toolbar dropdowns have a high z-index */
+.ql-toolbar.ql-snow .ql-picker-options {
+  z-index: 9999 !important;
+  background-color: white !important;
+  border: 1px solid #e2e8f0 !important; /* slate-200 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;
+}
+
+/* 2. Fix for the 'quickly gone' hover issue */
+.ql-snow .ql-picker.ql-expanded .ql-picker-options {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* 3. Ensure the font/header labels are visible */
+.ql-snow .ql-picker.ql-header .ql-picker-label::before,
+.ql-snow .ql-picker.ql-font .ql-picker-label::before {
+  line-height: 24px;
+}
+
+/* Make the short description editor compact */
+.short-quill .ql-container {
+  min-height: 80px; /* Much shorter than the main description */
+  font-size: 13px;
+}
+
+.short-quill .ql-editor {
+  padding: 8px 12px;
+}
+
+.short-quill .ql-editor img {
+  width: 100%;
+  height: auto;
+}
+
+/* Optional: Hide the toolbar until the user clicks (saves space) */
+.short-quill .ql-toolbar {
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 4px 8px !important;
+}
+
+/* Storefront product images: hint the browser toward the sharpest scaling
+   path available. Without this, downscaled thumbnails can look soft on
+   high-DPI monitors in some browsers. Applies to <img> tags we explicitly
+   mark with .pdp-crisp so we don't affect the rest of the site. */
+.pdp-crisp {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+/* Quill HTML rendered on storefront pages (single product description,
+   short description, etc.). Matches the editor's visual affordances so the
+   preview in admin looks the same as what the customer sees. */
+.product-rich {
+  color: #334155;
+  line-height: 1.65;
+  font-size: 0.9375rem;
+}
+.product-rich p {
+  margin: 0 0 0.85em;
+}
+.product-rich h1,
+.product-rich h2,
+.product-rich h3,
+.product-rich h4 {
+  color: #0f172a;
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 1.2em 0 0.5em;
+}
+.product-rich h1 { font-size: 1.5rem; }
+.product-rich h2 { font-size: 1.25rem; }
+.product-rich h3 { font-size: 1.125rem; }
+.product-rich ul,
+.product-rich ol {
+  margin: 0 0 0.85em 1.25rem;
+}
+.product-rich ul { list-style: disc; }
+.product-rich ol { list-style: decimal; }
+.product-rich li { margin-bottom: 0.25em; }
+.product-rich a {
+  color: #007074;
+  text-decoration: underline;
+}
+.product-rich strong { color: #0f172a; }
+.product-rich img {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 1em 0;
+  border-radius: 8px;
+}
+.product-rich blockquote {
+  border-left: 3px solid #007074;
+  padding: 0.25em 0 0.25em 1rem;
+  color: #475569;
+  margin: 0.85em 0;
+}
+
+/* Right-side off-canvas drawer used by ProductManage for adding a
+   category or brand without leaving the form. */
+.offcanvas-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(2px);
+  z-index: 60;
+}
+
+.offcanvas-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  box-shadow: -10px 0 30px -10px rgba(15, 23, 42, 0.15);
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  animation: offcanvas-slide 220ms ease-out;
+}
+
+@keyframes offcanvas-slide {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
