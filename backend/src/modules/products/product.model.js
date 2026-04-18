@@ -43,10 +43,16 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
 
-    subCategory: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Category",
-    },
+    // Multi-select: a product can live in several categories/sub-categories
+    // at once. `category` above is kept as the primary (first selected) so
+    // existing queries that filter on `category` continue to work.
+    categories: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Category",
+        index: true,
+      },
+    ],
 
     brand: {
       type: mongoose.Schema.Types.ObjectId,

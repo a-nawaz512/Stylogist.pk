@@ -48,3 +48,46 @@ export const useDeleteReview = () => {
         },
     });
 };
+
+// ---- Storefront hooks (public / authenticated customer) ----
+
+export const useProductReviews = (productIdOrSlug) => {
+    return useQuery({
+        queryKey: [...REVIEWS_KEY, 'product', productIdOrSlug],
+        queryFn: async () => {
+            const { data } = await axiosClient.get(`/reviews/product/${productIdOrSlug}`);
+            return data.data;
+        },
+        enabled: !!productIdOrSlug,
+    });
+};
+
+export const useReviewEligibility = (productId, enabled = true) => {
+    return useQuery({
+        queryKey: [...REVIEWS_KEY, 'eligibility', productId],
+        queryFn: async () => {
+            const { data } = await axiosClient.get(`/reviews/eligibility/${productId}`);
+            return data.data;
+        },
+        enabled: !!productId && !!enabled,
+        retry: false,
+    });
+};
+
+export const useCreateReview = (productId) => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload) => {
+            const { data } = await axiosClient.post('/reviews', payload);
+            return data.data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: [...REVIEWS_KEY, 'product', productId] });
+            qc.invalidateQueries({ queryKey: [...REVIEWS_KEY, 'eligibility', productId] });
+            toast.success('Review submitted — thanks! It will appear after moderation.');
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to submit review');
+        },
+    });
+};

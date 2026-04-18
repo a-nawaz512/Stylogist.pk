@@ -59,7 +59,7 @@ const buildMediaDocs = ({ thumbnail, media = [], productId, productSlug, metaTit
 };
 
 export const createProduct = async (payload) => {
-  const { variants, media = [], thumbnail, category, brand, subCategory, name, slug, metaTitle = "", metaDescription = "", ...rest } = payload;
+  const { variants, media = [], thumbnail, category, categories, brand, subCategory, name, slug, metaTitle = "", metaDescription = "", ...rest } = payload;
 
   if (!isValidObjectId(category)) throw new ApiError(400, "Invalid category id");
   const categoryDoc = await Category.findById(category);
@@ -84,6 +84,12 @@ export const createProduct = async (payload) => {
 
   const aggregates = aggregateFromVariants(variants);
 
+  // Normalize the multi-select list: always include the primary category and
+  // deduplicate so MongoDB stores a clean array.
+  const categoriesList = Array.isArray(categories) && categories.length
+    ? [...new Set([category, ...categories])]
+    : [category];
+
   const product = await Product.create({
     ...rest,
     name,
@@ -91,6 +97,7 @@ export const createProduct = async (payload) => {
     metaTitle,
     metaDescription,
     category,
+    categories: categoriesList,
     subCategory: subCategory || undefined,
     brand: brand || undefined,
     ...aggregates,
@@ -142,6 +149,7 @@ export const updateProduct = async (id, payload) => {
     media,
     thumbnail,
     category,
+    categories,
     brand,
     subCategory,
     name,
@@ -156,6 +164,11 @@ export const updateProduct = async (id, payload) => {
     const categoryDoc = await Category.findById(category);
     if (!categoryDoc) throw new ApiError(404, "Category not found");
     product.category = category;
+  }
+
+  if (Array.isArray(categories)) {
+    const primary = category || product.category;
+    product.categories = [...new Set([primary?.toString(), ...categories])].filter(Boolean);
   }
 
   if (brand !== undefined) {
@@ -274,7 +287,12 @@ export const getAllProducts = async (query = {}) => {
 
   if (category) {
     const categoryIds = await getDescendantCategoryIds(category);
-    filter.category = { $in: categoryIds };
+    // Match either the legacy `category` pointer or the multi-select list so
+    // products that live in several categories surface under every one of them.
+    filter.$or = [
+      { category: { $in: categoryIds } },
+      { categories: { $in: categoryIds } },
+    ];
   }
   if (brand) filter.brand = brand;
 

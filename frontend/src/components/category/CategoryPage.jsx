@@ -1,12 +1,16 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   FiFilter, FiChevronRight, FiStar, FiLoader, FiPackage,
-  FiChevronLeft, FiX, FiRefreshCw, FiAlertCircle
+  FiChevronLeft, FiX, FiRefreshCw, FiAlertCircle, FiHeart, FiShoppingCart,
+  FiChevronDown, FiCheck, FiSearch
 } from 'react-icons/fi';
+import { FaStar } from 'react-icons/fa';
 import { useProducts } from '../../features/products/useProductHooks';
 import { useCategories } from '../../features/categories/useCategoryHooks';
 import { useBrands } from '../../features/brands/useBrandHooks';
+import useWishlistStore from '../../store/useWishlistStore';
+import { resolveImageUrl } from '../../utils/imageUrl';
 
 const PAGE_SIZE = 12;
 
@@ -158,16 +162,13 @@ export default function CategoryPage() {
               </FilterSection>
 
               <FilterSection title="Brand">
-                <select
+                <FancyDropdown
                   value={brand}
-                  onChange={(e) => changeFilter(setBrand)(e.target.value)}
-                  className="w-full bg-white border border-slate-200 rounded-md py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
-                >
-                  <option value="">All brands</option>
-                  {brands.map((b) => (
-                    <option key={b._id} value={b._id}>{b.name}</option>
-                  ))}
-                </select>
+                  onChange={changeFilter(setBrand)}
+                  placeholder="All brands"
+                  searchable
+                  options={brands.map((b) => ({ value: b._id, label: b.name }))}
+                />
               </FilterSection>
 
               <FilterSection title={`Max price: ${maxPrice ? formatPKR(maxPrice) : 'any'}`}>
@@ -243,17 +244,24 @@ export default function CategoryPage() {
                 )}
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <label className="text-sm text-slate-500">Sort by</label>
-              <select
-                value={sort}
-                onChange={(e) => { setSort(e.target.value); setPage(1); }}
-                className="bg-white border border-slate-200 rounded-md py-1.5 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
-              >
-                {SORT_OPTIONS.map((o) => (
-                  <option key={o.id} value={o.id}>{o.label}</option>
-                ))}
-              </select>
+            <div className="flex items-center gap-3 flex-wrap">
+              <div className="w-52">
+                <FancyDropdown
+                  value={category}
+                  onChange={(v) => { changeFilter(setCategory)(v); }}
+                  placeholder="All categories"
+                  searchable
+                  options={topCategories.map((c) => ({ value: c._id, label: c.name }))}
+                />
+              </div>
+              <div className="w-44">
+                <FancyDropdown
+                  value={sort}
+                  onChange={(v) => { setSort(v); setPage(1); }}
+                  placeholder="Sort by"
+                  options={SORT_OPTIONS.map((o) => ({ value: o.id, label: o.label }))}
+                />
+              </div>
             </div>
           </div>
 
@@ -292,9 +300,9 @@ export default function CategoryPage() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {items.map((p) => (
-                  <ProductCard key={p._id} product={p} />
+              <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                {items.map((p, idx) => (
+                  <ProductCard key={p._id} product={p} index={idx} />
                 ))}
               </div>
 
@@ -365,62 +373,203 @@ function FilterPill({ active, onClick, children }) {
   );
 }
 
-function ProductCard({ product }) {
+// Matches the home page's FeaturedProducts card: bordered image frame, hover
+// scale on the image, floating wishlist button, slide-up Quick Add bar.
+function ProductCard({ product, index = 0 }) {
   const to = `/product/${product.slug}`;
   const discount =
     product.maxPrice && product.minPrice && product.maxPrice > product.minPrice
       ? Math.round(((product.maxPrice - product.minPrice) / product.maxPrice) * 100)
       : product.discountPercentage || 0;
 
-  return (
-    <Link to={to} className="group block">
-      <div className="relative aspect-[3/4] rounded-xl overflow-hidden bg-slate-100">
-        {product.image ? (
-          <img
-            src={product.image}
-            alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-300">
-            <FiPackage size={36} />
-          </div>
-        )}
-        {discount > 0 && (
-          <span className="absolute top-3 left-3 bg-rose-500 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
-            -{discount}%
-          </span>
-        )}
-        {product.totalStock === 0 && (
-          <span className="absolute top-3 right-3 bg-slate-900 text-white text-[11px] font-medium px-2 py-0.5 rounded-full">
-            Sold out
-          </span>
-        )}
-      </div>
+  const toggleWishlist = useWishlistStore((s) => s.toggle);
+  const wishlistItems = useWishlistStore((s) => s.items);
+  const inWishlist = wishlistItems.some((w) => w.productId === product._id);
 
-      <div className="mt-3">
-        <div className="text-[11px] text-slate-500 uppercase tracking-wider">
-          {product.brand?.name || '—'}
-        </div>
-        <h3 className="text-sm font-medium text-slate-900 mt-1 line-clamp-1 group-hover:text-[#007074]">
-          {product.name}
-        </h3>
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold text-slate-900">{formatPKR(product.minPrice)}</span>
-            {product.maxPrice && product.maxPrice !== product.minPrice && (
-              <span className="text-xs text-slate-400">– {formatPKR(product.maxPrice)}</span>
+  const handleWishlist = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleWishlist({
+      productId: product._id,
+      slug: product.slug,
+      name: product.name,
+      image: product.image || null,
+      price: product.minPrice || 0,
+      brandName: product.brand?.name,
+    });
+  };
+
+  return (
+    <div
+      className="group flex flex-col relative w-full animate-[slideUp_0.5s_ease-out_forwards]"
+      style={{ animationDelay: `${Math.min(index, 8) * 80}ms` }}
+    >
+      <div className="relative aspect-[6/4] sm:aspect-[3/4] sm:rounded-[1.75rem] bg-white border border-gray-100 p-2 shadow-sm transition-all duration-500 group-hover:shadow-xl group-hover:-translate-y-1 overflow-hidden">
+        <div className="w-full h-full bg-[#F7F3F0] rounded-md sm:rounded-[1.25rem] overflow-hidden relative">
+          <Link to={to} className="block w-full h-full">
+            {product.image ? (
+              <img
+                src={resolveImageUrl(product.image)}
+                alt={product.name}
+                width="300"
+                height="300"
+                loading="lazy"
+                decoding="async"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-slate-300">
+                <FiPackage size={36} />
+              </div>
             )}
-          </div>
-          {product.averageRating > 0 && (
-            <div className="flex items-center gap-0.5 text-[11px] text-slate-500">
-              <FiStar className="fill-amber-400 text-amber-400" size={11} />
-              {product.averageRating.toFixed(1)}
+          </Link>
+
+          {discount > 0 && (
+            <div className="absolute top-3 left-3 bg-[#007074] text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest shadow-md z-10">
+              -{discount}%
             </div>
           )}
+          {product.totalStock === 0 && (
+            <div className="absolute top-3 left-3 bg-slate-900 text-white text-[8px] font-black px-2 py-1 rounded-full uppercase tracking-widest shadow-md z-10">
+              Sold out
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleWishlist}
+            className="absolute top-3 right-3 z-20 p-2 rounded-full bg-white/90 backdrop-blur-md shadow-sm transition-all hover:scale-110"
+          >
+            <FiHeart size={16} className={inWishlist ? 'fill-red-500 text-red-500' : 'text-gray-400'} />
+          </button>
+
+          <div className="absolute bottom-3 left-3 right-3 translate-y-12 group-hover:translate-y-0 transition-all duration-500 z-20">
+            <Link
+              to={to}
+              className="w-full bg-[#222]/95 backdrop-blur-md text-white py-2.5 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-center gap-2 hover:bg-[#007074] shadow-xl"
+            >
+              <FiShoppingCart size={14} /> Quick View
+            </Link>
+          </div>
         </div>
       </div>
-    </Link>
+
+      <div className="mt-4 px-1 text-center">
+        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1 block">
+          {product.brand?.name || '—'}
+        </span>
+        <Link to={to}>
+          <h3 className="text-[13px] sm:text-[14px] font-bold text-[#222] hover:text-[#007074] transition-colors leading-tight line-clamp-1 mb-2">
+            {product.name}
+          </h3>
+        </Link>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          <span className="text-[14px] font-black text-[#007074]">{formatPKR(product.minPrice)}</span>
+          {product.maxPrice && product.maxPrice !== product.minPrice && (
+            <span className="text-[11px] text-gray-300 line-through font-bold">
+              {formatPKR(product.maxPrice)}
+            </span>
+          )}
+        </div>
+        {product.averageRating > 0 && (
+          <div className="flex justify-center items-center gap-0.5 mt-2.5">
+            {[...Array(5)].map((_, i) => (
+              <FaStar
+                key={i}
+                className={`w-2.5 h-2.5 ${i < Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-200'}`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// A dressier replacement for <select> — supports a search box and renders the
+// options in a floating panel so the filter dropdowns feel consistent with the
+// rest of the admin-style controls.
+function FancyDropdown({ value, onChange, options, placeholder, searchable = false }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const filtered = useMemo(() => {
+    if (!searchable || !search.trim()) return options;
+    const q = search.toLowerCase();
+    return options.filter((o) => o.label.toLowerCase().includes(q));
+  }, [options, search, searchable]);
+
+  const selectedLabel = options.find((o) => o.value === value)?.label || '';
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full bg-white border border-slate-200 rounded-lg py-2 px-3 text-sm text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074] transition-colors"
+      >
+        <span className={selectedLabel ? 'text-slate-900 truncate' : 'text-slate-400'}>
+          {selectedLabel || placeholder}
+        </span>
+        <FiChevronDown size={14} className={`text-slate-400 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <div className="absolute z-30 left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg overflow-hidden">
+          {searchable && (
+            <div className="p-2 border-b border-slate-100 bg-slate-50">
+              <div className="relative">
+                <FiSearch size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input
+                  autoFocus
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search…"
+                  className="w-full pl-8 pr-2 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#007074]/20"
+                />
+              </div>
+            </div>
+          )}
+          <ul className="max-h-60 overflow-y-auto py-1">
+            <li>
+              <button
+                type="button"
+                onClick={() => { onChange(''); setOpen(false); }}
+                className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 ${!value ? 'text-[#007074] font-medium' : 'text-slate-700'}`}
+              >
+                {placeholder}
+              </button>
+            </li>
+            {filtered.length === 0 && (
+              <li className="px-3 py-4 text-center text-xs text-slate-400">No matches.</li>
+            )}
+            {filtered.map((o) => (
+              <li key={o.value}>
+                <button
+                  type="button"
+                  onClick={() => { onChange(o.value); setOpen(false); setSearch(''); }}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 flex items-center justify-between ${
+                    o.value === value ? 'text-[#007074] font-medium' : 'text-slate-700'
+                  }`}
+                >
+                  <span className="truncate">{o.label}</span>
+                  {o.value === value && <FiCheck size={14} />}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
   );
 }
 

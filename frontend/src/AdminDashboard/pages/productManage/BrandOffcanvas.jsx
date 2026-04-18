@@ -1,0 +1,120 @@
+import React, { useState } from 'react';
+import { FiLoader, FiUploadCloud, FiX } from 'react-icons/fi';
+import toast from 'react-hot-toast';
+import { useCreateBrand } from '../../../features/brands/useBrandHooks';
+import { useUploadImage } from '../../../features/uploads/useUploadHooks';
+import { Field } from './fields';
+import { UploadHint } from './MediaUploader';
+import { inputCls, slugify } from './shared';
+
+export default function BrandOffcanvas({ onClose, onCreated }) {
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [website, setWebsite] = useState('');
+  const [logo, setLogo] = useState(null);
+  const uploadOne = useUploadImage();
+  const createBrand = useCreateBrand();
+
+  const handleLogo = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await uploadOne.mutateAsync({
+        file,
+        productSlug: slugify(name) || 'brand',
+        role: 'thumbnail',
+      });
+      setLogo({ url: res.url });
+    } catch { /* hook toast */ }
+    e.target.value = '';
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!name.trim()) return toast.error('Brand name is required');
+    try {
+      const brand = await createBrand.mutateAsync({
+        name: name.trim(),
+        description: description.trim() || undefined,
+        website: website.trim() || undefined,
+        logo: logo?.url || undefined,
+      });
+      onCreated(brand);
+    } catch { /* hook toast */ }
+  };
+
+  return (
+    <>
+      <div className="offcanvas-backdrop" onClick={onClose} />
+      <aside className="offcanvas-panel">
+        <header className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">Add brand</h3>
+            <p className="text-xs text-slate-500">Brand details appear on product pages.</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-md text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center">
+            <FiX size={16} />
+          </button>
+        </header>
+        <form onSubmit={submit} className="flex-1 overflow-y-auto p-5 space-y-4">
+          <Field label="Name" required>
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Stylogist" className={inputCls} />
+          </Field>
+          <Field label="Website">
+            <input value={website} onChange={(e) => setWebsite(e.target.value)} placeholder="https://example.com" className={inputCls} />
+          </Field>
+          <Field label="Description">
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className={`${inputCls} resize-none`}
+              placeholder="Short brand description (optional)"
+            />
+          </Field>
+          <Field label="Logo" hint="Uploaded and stored as webp">
+            <UploadHint>
+              Recommended <strong>300 × 300&nbsp;px</strong> with a transparent background (PNG or WebP) ·
+              up to 10&nbsp;MB.
+            </UploadHint>
+            {logo ? (
+              <div className="mt-2 relative w-28 h-28 rounded-lg overflow-hidden border border-slate-200">
+                <img src={logo.url} alt="logo" width="120" height="120" className="w-full h-full object-contain bg-slate-50" />
+                <button
+                  type="button"
+                  onClick={() => setLogo(null)}
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full bg-white/90 text-slate-600 flex items-center justify-center shadow"
+                >
+                  <FiX size={12} />
+                </button>
+              </div>
+            ) : (
+              <label className="mt-2 flex flex-col items-center justify-center h-24 border-2 border-dashed border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 hover:border-[#007074] transition-colors">
+                {uploadOne.isPending ? (
+                  <FiLoader className="animate-spin text-[#007074]" size={20} />
+                ) : (
+                  <>
+                    <FiUploadCloud size={20} className="text-[#007074] mb-1" />
+                    <span className="text-xs text-slate-500">Upload logo</span>
+                  </>
+                )}
+                <input type="file" accept="image/*" onChange={handleLogo} className="hidden" />
+              </label>
+            )}
+          </Field>
+        </form>
+        <footer className="px-5 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
+          <button type="button" onClick={onClose}
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="button" onClick={submit} disabled={createBrand.isPending}
+            className="px-4 py-2 bg-[#007074] text-white rounded-lg text-sm font-medium hover:bg-[#005a5d] disabled:opacity-60 flex items-center gap-2">
+            {createBrand.isPending && <FiLoader className="animate-spin" size={14} />}
+            Add brand
+          </button>
+        </footer>
+      </aside>
+    </>
+  );
+}

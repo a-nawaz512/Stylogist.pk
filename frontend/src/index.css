@@ -65,6 +65,19 @@
 
 .short-quill .ql-editor {
   padding: 8px 12px;
+  /* Reset baseline weight so the user's first keystroke doesn't inherit a
+     heavy weight from any surrounding label/heading. Bold tags (<strong>/<b>)
+     still render at 700. */
+  font-weight: 400;
+}
+.short-quill .ql-editor p,
+.short-quill .ql-editor ul,
+.short-quill .ql-editor ol {
+  font-weight: 400;
+}
+.short-quill .ql-editor strong,
+.short-quill .ql-editor b {
+  font-weight: 700;
 }
 
 .short-quill .ql-editor img {
@@ -77,6 +90,27 @@
   border-bottom: 1px solid #e2e8f0 !important;
   padding: 4px 8px !important;
 }
+
+/* Register the font families the ProductManage whitelist exposes so the
+   dropdown labels and applied styles actually reflect their typeface. */
+.ql-font-sans-serif { font-family: 'Inter', system-ui, sans-serif; }
+.ql-font-serif      { font-family: 'Playfair Display', Georgia, serif; }
+.ql-font-monospace  { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ql-font-inter      { font-family: 'Inter', system-ui, sans-serif; }
+.ql-font-poppins    { font-family: 'Poppins', sans-serif; }
+.ql-font-playfair   { font-family: 'Playfair Display', Georgia, serif; }
+.ql-font-roboto     { font-family: 'Roboto', system-ui, sans-serif; }
+.ql-font-lora       { font-family: 'Lora', Georgia, serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="inter"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="inter"]::before    { content: 'Inter'; font-family: 'Inter', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="poppins"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="poppins"]::before  { content: 'Poppins'; font-family: 'Poppins', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="playfair"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="playfair"]::before { content: 'Playfair'; font-family: 'Playfair Display', serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before   { content: 'Roboto'; font-family: 'Roboto', sans-serif; }
+.ql-snow .ql-picker.ql-font .ql-picker-label[data-value="lora"]::before,
+.ql-snow .ql-picker.ql-font .ql-picker-item[data-value="lora"]::before     { content: 'Lora'; font-family: 'Lora', serif; }
 
 /* Storefront product images: hint the browser toward the sharpest scaling
    path available. Without this, downscaled thumbnails can look soft on
@@ -97,7 +131,20 @@
   color: #334155;
   line-height: 1.65;
   font-size: 0.9375rem;
+  /* Prevent authored content (long words, wide tables, embedded iframes)
+     from forcing the container to overflow horizontally on mobile. */
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
+.product-rich table,
+.product-rich pre,
+.product-rich iframe,
+.product-rich video {
+  max-width: 100%;
+  display: block;
+}
+.product-rich pre { overflow-x: auto; }
 .product-rich p {
   margin: 0 0 0.85em;
 }
@@ -167,4 +214,61 @@
 @keyframes offcanvas-slide {
   from { transform: translateX(100%); }
   to   { transform: translateX(0); }
+}
+
+/* Gentle entrance used by product cards so fresh rows don't just pop in. */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Reveal-on-scroll primitive. Pair with useRevealOnScroll() — the hook flips
+   data-reveal to "visible" when the element enters the viewport. Using CSS
+   instead of framer-motion for this keeps the bundle light. */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 620ms ease-out, transform 620ms ease-out;
+  will-change: opacity, transform;
+}
+[data-reveal="visible"] {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Global overlay loader used during route transitions. */
+.route-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: routeLoaderFade 220ms ease-out;
+}
+@keyframes routeLoaderFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.route-loader__spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 112, 116, 0.15);
+  border-top-color: #007074;
+  animation: spin 720ms linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Thin progress bar used at the top of the page while data is fetching. */
+.route-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #007074, #0a8c91);
+  z-index: 10000;
+  transition: width 240ms ease-out, opacity 220ms ease-out;
 }

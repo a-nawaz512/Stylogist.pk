@@ -27,3 +27,9 @@ export const createReview = async (req, res) => {
   const review = await ReviewService.createReview(req.user.id, req.validated.body);
   res.status(201).json({ status: "success", message: "Review submitted (pending moderation)", data: review });
 };
+
+// Authenticated customer — drives the "Write a review" button visibility.
+export const getReviewEligibility = async (req, res) => {
+  const data = await ReviewService.checkReviewEligibility(req.user.id, req.params.productId);
+  res.status(200).json({ status: "success", data });
+};

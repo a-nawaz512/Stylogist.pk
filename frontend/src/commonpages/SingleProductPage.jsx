@@ -9,6 +9,9 @@ import toast from 'react-hot-toast';
 import { useProduct } from '../features/products/useProductHooks';
 import useCartStore from '../store/useCartStore';
 import useWishlistStore from '../store/useWishlistStore';
+import Seo from '../components/common/Seo';
+import ReviewsSection from '../components/product/ReviewsSection';
+import { resolveImageUrl } from '../utils/imageUrl';
 
 const fmtPKR = (n) => `Rs ${Math.round(n || 0).toLocaleString()}`;
 
@@ -27,7 +30,7 @@ export default function ProductDetailsPage() {
 
   // Prefer uploaded media; fall back to the product's own image field if any; never leave it empty.
   const images = useMemo(
-    () => (media.length ? media.map((m) => m.url) : []),
+    () => (media.length ? media.map((m) => resolveImageUrl(m.url)) : []),
     [media]
   );
 
@@ -47,35 +50,15 @@ export default function ProductDetailsPage() {
     if (colors.length) setSelectedColor((prev) => prev || colors[0]);
   }, [images, sizes, colors]);
 
-  // Apply product-level SEO fields to the document head while the page is mounted.
-  useEffect(() => {
-    if (!product) return;
-    const prevTitle = document.title;
-    const title = product.metaTitle?.trim() || `${product.name} | Stylogist`;
-    document.title = title;
-
-    const ensureMeta = (name) => {
-      let tag = document.querySelector(`meta[name="${name}"]`);
-      if (!tag) {
-        tag = document.createElement('meta');
-        tag.setAttribute('name', name);
-        document.head.appendChild(tag);
-      }
-      return tag;
-    };
-    const descTag = ensureMeta('description');
-    const prevDesc = descTag.getAttribute('content') || '';
-    const metaDesc =
-      product.metaDescription?.trim() ||
+  // Per-product SEO title/description/image is rendered via <Seo /> below so
+  // the tags update on every navigation and can be read by crawlers without
+  // waiting on a client-side effect.
+  const seoTitle = product?.metaTitle?.trim() || (product ? `${product.name} | Stylogist` : '');
+  const seoDescription = product
+    ? product.metaDescription?.trim() ||
       stripHtml(product.shortDescription) ||
-      stripHtml(product.description).slice(0, 160);
-    descTag.setAttribute('content', metaDesc);
-
-    return () => {
-      document.title = prevTitle;
-      descTag.setAttribute('content', prevDesc);
-    };
-  }, [product]);
+      stripHtml(product.description).slice(0, 160)
+    : '';
 
   // Resolve the variant that matches the current size/color. If only one attribute
   // exists we relax the match so the user isn't forced to pick something irrelevant.
@@ -92,6 +75,56 @@ export default function ProductDetailsPage() {
 
   const stock = matchedVariant?.stock ?? 0;
   const outOfStock = stock <= 0;
+
+  // schema.org Product JSON-LD. Gives Google the data it needs to render a
+  // rich product result (price, availability, rating, brand) on the SERP.
+  const productJsonLd = useMemo(() => {
+    if (!product) return null;
+    const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+    const anyInStock = variants.some((v) => (v.stock ?? 0) > 0);
+    const offers = variants.length
+      ? variants.map((v) => ({
+          '@type': 'Offer',
+          sku: v.sku,
+          price: v.salePrice,
+          priceCurrency: 'PKR',
+          availability:
+            (v.stock ?? 0) > 0
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+          itemCondition: 'https://schema.org/NewCondition',
+          url: canonicalUrl,
+        }))
+      : undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: seoDescription,
+      image: images,
+      sku: matchedVariant?.sku || undefined,
+      brand: product.brand?.name ? { '@type': 'Brand', name: product.brand.name } : undefined,
+      category: product.category?.name || undefined,
+      url: canonicalUrl,
+      aggregateRating:
+        product.averageRating && product.totalReviews
+          ? {
+              '@type': 'AggregateRating',
+              ratingValue: product.averageRating,
+              reviewCount: product.totalReviews,
+            }
+          : undefined,
+      offers: offers || {
+        '@type': 'Offer',
+        price: product.minPrice || 0,
+        priceCurrency: 'PKR',
+        availability: anyInStock
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
+        url: canonicalUrl,
+      },
+    };
+  }, [product, variants, images, matchedVariant, seoDescription]);
   const lowStock = !outOfStock && stock <= 5;
 
   const price = matchedVariant?.salePrice ?? product?.minPrice ?? 0;
@@ -196,6 +229,15 @@ export default function ProductDetailsPage() {
 
   return (
     <div className="w-full bg-[#FDFDFD] min-h-screen font-sans text-[#222]">
+      <Seo
+        title={seoTitle}
+        description={seoDescription}
+        image={images[0]}
+        type="product"
+        canonical={typeof window !== 'undefined' ? window.location.href : undefined}
+        jsonLd={productJsonLd}
+        jsonLdId={`product-${product?._id}`}
+      />
       {/* Top announcement bar — keeps the headline promises visible the moment the page loads. */}
       <div className="bg-[#222] text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-center gap-x-8 gap-y-1.5 text-[10px] font-black uppercase tracking-[0.25em]">
@@ -234,19 +276,25 @@ export default function ProductDetailsPage() {
                   <button
                     key={idx}
                     onClick={() => setActiveImage(src)}
-                    className={`w-16 aspect-square rounded-xl overflow-hidden border transition-all bg-[#F7F3F0] ${
+                    aria-label={`View image ${idx + 1}`}
+                    aria-pressed={activeImage === src}
+                    className={`w-16 aspect-square rounded-xl overflow-hidden border p-1 bg-white shadow-sm transition-all ${
                       activeImage === src
-                        ? 'border-[#007074] shadow-sm'
+                        ? 'border-[#007074] shadow-md -translate-y-0.5'
                         : 'border-gray-100 hover:border-[#007074]/40'
                     }`}
                   >
-                    <img
-                      src={src}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                      className="pdp-crisp w-full h-full object-contain p-1"
-                    />
+                    <div className="w-full h-full bg-[#F7F3F0] rounded-lg overflow-hidden">
+                      <img
+                        src={src}
+                        alt={`${product.name} thumbnail ${idx + 1}`}
+                        width="64"
+                        height="64"
+                        loading="lazy"
+                        decoding="async"
+                        className="pdp-crisp w-full h-full object-cover"
+                      />
+                    </div>
                   </button>
                 ))}
               </div>
@@ -516,6 +564,20 @@ export default function ProductDetailsPage() {
                     You save {fmtPKR(savings * quantity)} on this order
                   </p>
                 )}
+                <button
+                  onClick={handleBuyNow}
+                  disabled={outOfStock}
+                  className="w-full mt-2 bg-[#007074] text-white py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] hover:bg-[#005a5d] transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                >
+                  <FiZap size={14} /> Buy now
+                </button>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={outOfStock}
+                  className="w-full bg-white text-[#222] border border-slate-200 py-3 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] hover:border-[#222] transition-colors disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                >
+                  <FiShoppingCart size={14} /> Add to cart
+                </button>
               </div>
             </div>
           </div>
@@ -547,7 +609,7 @@ export default function ProductDetailsPage() {
           ))}
         </div>
 
-        <div className="py-8 text-sm text-gray-600 leading-relaxed">
+        <div className="py-8 text-sm text-gray-600 leading-relaxed min-w-0 overflow-hidden">
           {tab === 'description' && (
             product.description ? (
               <div
@@ -608,6 +670,8 @@ export default function ProductDetailsPage() {
                     <img
                       src={m.url}
                       alt={m.alt || m.metaTitle || `${product.name} image ${idx + 1}`}
+                      width="600"
+                      height="600"
                       loading="lazy"
                       decoding="async"
                       className="pdp-crisp w-full h-auto object-contain p-3"
@@ -626,13 +690,7 @@ export default function ProductDetailsPage() {
             )
           )}
 
-          {tab === 'reviews' && (
-            <div className="text-gray-500 text-sm">
-              {product.totalReviews > 0
-                ? 'Customer reviews will be displayed here once the reviews feed is wired in.'
-                : 'No reviews yet. Be the first to share your experience.'}
-            </div>
-          )}
+          {tab === 'reviews' && <ReviewsSection product={product} />}
         </div>
 
         {/* Variants table — always shown so the buyer sees exactly what's stocked. */}
@@ -793,7 +851,7 @@ function ZoomableImage({ src, alt }) {
   }
 
   return (
-    <div className="aspect-[4/5] bg-white border border-gray-100 rounded-[2rem] p-2 shadow-sm">
+    <div className="group aspect-[4/5] bg-white border border-gray-100 rounded-[2rem] p-2 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5">
       <div
         className="relative w-full h-full bg-[#F7F3F0] rounded-[1.5rem] overflow-hidden cursor-zoom-in select-none"
         onPointerMove={handleMove}
@@ -802,10 +860,13 @@ function ZoomableImage({ src, alt }) {
         <img
           src={src}
           alt={alt}
+          width="800"
+          height="1000"
           draggable={false}
           loading="eager"
+          fetchpriority="high"
           decoding="async"
-          className={`pdp-crisp w-full h-full object-contain p-3 transition-opacity duration-200 ${zoom ? 'opacity-0' : 'opacity-100'}`}
+          className={`pdp-crisp w-full h-full object-cover transition-[opacity,transform] duration-500 group-hover:scale-[1.03] ${zoom ? 'opacity-0' : 'opacity-100'}`}
         />
         {zoom && (
           <div

@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Review } from "./review.model.js";
 import { Product } from "../products/product.model.js";
 import { User } from "../users/user.model.js";
+import Order from "../orders/order.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 
 // Recomputes Product.averageRating + Product.totalReviews from *approved* reviews.
@@ -116,6 +117,33 @@ export const createReview = async (userId, payload) => {
   const productDoc = await Product.findById(product).select("_id").lean();
   if (!productDoc) throw new ApiError(404, "Product not found");
 
+  // Only buyers with a *delivered* order for this product may review. If the
+  // client didn't supply an order id we resolve one automatically — pick any
+  // delivered order from the user that contains the product.
+  let orderDoc;
+  if (order) {
+    orderDoc = await Order.findOne({
+      _id: order,
+      user: userId,
+      status: "delivered",
+      "items.product": product,
+    }).lean();
+  } else {
+    orderDoc = await Order.findOne({
+      user: userId,
+      status: "delivered",
+      "items.product": product,
+    })
+      .sort({ updatedAt: -1 })
+      .lean();
+  }
+  if (!orderDoc) {
+    throw new ApiError(
+      403,
+      "Only customers with a delivered order for this product can leave a review."
+    );
+  }
+
   const existing = await Review.findOne({ user: userId, product });
   if (existing) {
     throw new ApiError(409, "You have already reviewed this product. Edit or delete the previous one to re-review.");
@@ -124,7 +152,7 @@ export const createReview = async (userId, payload) => {
   const review = await Review.create({
     user: userId,
     product,
-    order,
+    order: orderDoc._id,
     rating,
     comment: comment || "",
   });
@@ -134,4 +162,28 @@ export const createReview = async (userId, payload) => {
     { path: "user", select: "name" },
     { path: "product", select: "name slug" },
   ]);
+};
+
+// Tiny helper the frontend calls to decide whether to show "Write a review".
+// Returns { canReview, hasReviewed, orderId }.
+export const checkReviewEligibility = async (userId, productId) => {
+  if (!mongoose.isValidObjectId(productId)) {
+    throw new ApiError(400, "Invalid product id");
+  }
+  const [hasReviewed, order] = await Promise.all([
+    Review.exists({ user: userId, product: productId }),
+    Order.findOne({
+      user: userId,
+      status: "delivered",
+      "items.product": productId,
+    })
+      .select("_id")
+      .sort({ updatedAt: -1 })
+      .lean(),
+  ]);
+  return {
+    canReview: !!order && !hasReviewed,
+    hasReviewed: !!hasReviewed,
+    orderId: order?._id || null,
+  };
 };

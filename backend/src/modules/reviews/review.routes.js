@@ -20,6 +20,13 @@ router.get("/product/:productId", catchAsync(ReviewController.listProductReviews
 // Customer: submit a review.
 router.post("/", authMiddleware, validate(createReviewSchema), catchAsync(ReviewController.createReview));
 
+// Customer: check whether the current user is allowed to review a product.
+router.get(
+  "/eligibility/:productId",
+  authMiddleware,
+  catchAsync(ReviewController.getReviewEligibility)
+);
+
 // Admin: moderate.
 router.get("/", ...adminOnly, catchAsync(ReviewController.listReviews));
 router.patch(

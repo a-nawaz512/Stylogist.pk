@@ -30,11 +30,20 @@ import AdminSettings from './AdminDashboard/pages/AdminSettings'
 import ScrollToTop from './commonpages/ScrollToTop'
 import EnterOTP from './commonpages/OTPpage'
 import ResetPassword from './commonpages/resetPasswordPage'
+import RouteLoader from './components/common/RouteLoader'
+import Seo from './components/common/Seo'
 
 
 const MainLayout = () => {
   return (
     <div>
+      {/* Default site-wide SEO — per-page <Seo /> components override these. */}
+      <Seo
+        title="Stylogist.pk — Curated fashion, beauty & lifestyle"
+        description="Shop hand-picked fashion, beauty and lifestyle essentials with free shipping and cash on delivery across Pakistan."
+        type="website"
+      />
+      <RouteLoader />
       <Navbar />
       <ScrollToTop />
       <Outlet />
