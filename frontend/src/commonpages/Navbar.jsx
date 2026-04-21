@@ -13,7 +13,7 @@ import { getLoginUser } from '../features/user/useUserHooks';
 import { useLogout } from '../features/auth/useAuthHooks';
 import { useCategories } from '../features/categories/useCategoryHooks';
 import { useProducts } from '../features/products/useProductHooks';
-import logo from "/stylogist.pk.png"
+import logo from "/logo.png"
 
 const fmtPKR = (n) => `Rs ${Math.round(n || 0).toLocaleString()}`;
 

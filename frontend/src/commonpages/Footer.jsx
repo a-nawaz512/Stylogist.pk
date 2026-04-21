@@ -1,14 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  FiMail, 
-  FiPhoneCall, 
-  FiMapPin, 
-  FiInstagram, 
-  FiFacebook, 
-  FiTwitter, 
-  FiArrowRight 
+import {
+  FiMail,
+  FiPhoneCall,
+  FiMapPin,
+  FiInstagram,
+  FiFacebook,
+  FiTwitter,
+  FiArrowRight
 } from 'react-icons/fi';
+import logo from '/logo.png';
 
 export default function Footer() {
   const shopLinks = [
@@ -38,13 +39,16 @@ export default function Footer() {
           
           {/* Column 1: Brand Info (Spans 4 cols on large screens) */}
           <div className="lg:col-span-4">
-            <Link to="/" className="flex items-center space-x-2 group mb-6">
-              <div className="w-10 h-10 bg-[#007074] rounded-md flex items-center justify-center">
-                <span className="text-white text-2xl font-bold font-serif">S</span>
-              </div>
-              <span className="text-2xl font-bold text-white uppercase tracking-widest">
-                tylogist<span className="text-[#007074]">.pk</span>
-              </span>
+            <Link to="/" className="inline-flex items-center group mb-6" aria-label="Stylogist.pk home">
+              <img
+                src={logo}
+                alt="Stylogist.pk"
+                width="140"
+                height="44"
+                className="h-11 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.03]"
+                loading="lazy"
+                decoding="async"
+              />
             </Link>
             <p className="text-gray-400 text-sm leading-relaxed mb-8 max-w-sm">
               Your ultimate destination for premium fashion, curated by AI and tailored for the modern, sophisticated lifestyle. Elevate your everyday elegance.
