@@ -1,5 +1,8 @@
 // src/modules/admin/admin.validation.js
 import { z } from 'zod';
+import { ALL_PERMISSIONS } from '../permissions/permissions.js';
+
+const objectId = /^[0-9a-fA-F]{24}$/;
 
 // ---------------------------
 // Admin Login Schema
@@ -46,5 +49,15 @@ export const createAdminSchema = z.object({
       .regex(/[@$!%*?&]/, { message: 'Password must contain at least one special character (@$!%*?&)' }),
     phone: z.string().min(10, { message: 'Phone is required' }), // <-- added
     role: z.enum(['Staff', 'Super Admin'], { required_error: 'Role is required' }),
+    permissions: z.array(z.enum(ALL_PERMISSIONS)).optional(),
   })
+});
+
+export const updateStaffPermissionsSchema = z.object({
+  params: z.object({
+    id: z.string().regex(objectId, 'Invalid staff id'),
+  }),
+  body: z.object({
+    permissions: z.array(z.enum(ALL_PERMISSIONS)),
+  }),
 });

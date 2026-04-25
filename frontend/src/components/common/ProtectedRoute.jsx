@@ -25,9 +25,10 @@ export default function ProtectedRoute({ children, adminOnly = false }) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // Admin console is locked to Super Admin only (per product spec). Other
-  // roles — even Staff — get bounced to the storefront home.
-  if (adminOnly && user?.role !== 'Super Admin') {
+  // Admin console is open to Super Admin and Staff. Per-route gating for
+  // staff happens in the Sidebar (UI hint) and on the backend (authoritative
+  // permission checks). Customers and unauthorised roles bounce home.
+  if (adminOnly && !['Super Admin', 'Staff'].includes(user?.role)) {
     return <Navigate to="/" replace />;
   }
 

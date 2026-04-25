@@ -14,12 +14,24 @@ import toast from 'react-hot-toast';
 
 const emptyForm = {
   name: '',
+  slug: '',
   description: '',
+  metaTitle: '',
+  metaDescription: '',
   website: '',
   logo: '',
   isFeatured: false,
   isActive: true,
 };
+
+const slugify = (value) =>
+  (value || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/['"’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 export default function BrandManage() {
   const [form, setForm] = useState(emptyForm);
@@ -60,7 +72,10 @@ export default function BrandManage() {
     setEditing(brand);
     setForm({
       name: brand.name,
+      slug: brand.slug || '',
       description: brand.description || '',
+      metaTitle: brand.metaTitle || '',
+      metaDescription: brand.metaDescription || '',
       website: brand.website || '',
       logo: brand.logo || '',
       isFeatured: !!brand.isFeatured,
@@ -71,10 +86,15 @@ export default function BrandManage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error('Brand name is required');
+    if (form.metaTitle.length > 60) return toast.error('Meta title must be 60 characters or fewer');
+    if (form.metaDescription.length > 160) return toast.error('Meta description must be 160 characters or fewer');
 
     const payload = {
       name: form.name.trim(),
+      slug: form.slug.trim() || undefined,
       description: form.description.trim() || undefined,
+      metaTitle: form.metaTitle.trim() || undefined,
+      metaDescription: form.metaDescription.trim() || undefined,
       website: form.website.trim() || undefined,
       logo: form.logo || null,
       isFeatured: form.isFeatured,
@@ -134,15 +154,45 @@ export default function BrandManage() {
               />
             </Field>
 
-            <Field label="Description">
+            <Field
+              label="Slug"
+              hint="URL segment — e.g. /brand/nike. Auto-generated from name when blank."
+            >
+              <input
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
+                placeholder={slugify(form.name) || 'nike'}
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Description" hint="Rendered as a paragraph at the bottom of the public brand page.">
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
+                rows={4}
                 placeholder="Brand story or positioning"
                 className={`${inputCls} resize-none`}
               />
             </Field>
+
+            <CountedField
+              label="Meta title"
+              hint="≤ 60 chars · keep unique per brand"
+              value={form.metaTitle}
+              max={60}
+              onChange={(v) => setForm({ ...form, metaTitle: v })}
+              placeholder="Nike | Stylogist"
+            />
+
+            <CountedField
+              label="Meta description"
+              hint="≤ 160 chars · summarises the brand for Google"
+              value={form.metaDescription}
+              max={160}
+              onChange={(v) => setForm({ ...form, metaDescription: v })}
+              placeholder="Shop the latest Nike sneakers, apparel and accessories…"
+            />
 
             <Field label="Website">
               <input
@@ -283,13 +333,35 @@ export default function BrandManage() {
 const inputCls =
   'w-full bg-white border border-slate-200 rounded-lg py-2.5 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074] transition-colors';
 
-function Field({ label, required, children }) {
+function Field({ label, hint, required, children }) {
   return (
     <label className="block">
       <span className="text-xs font-medium text-slate-600 mb-1 inline-block">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </span>
       {children}
+      {hint && <span className="text-[11px] text-slate-400 mt-1 block">{hint}</span>}
+    </label>
+  );
+}
+
+function CountedField({ label, hint, value, max, onChange, placeholder }) {
+  const used = (value || '').length;
+  const over = used > max;
+  return (
+    <label className="block">
+      <span className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium text-slate-600">{label}</span>
+        <span
+          className={`text-[10px] font-semibold tabular-nums ${
+            over ? 'text-red-500' : used > max * 0.9 ? 'text-amber-500' : 'text-slate-400'
+          }`}
+        >
+          {used} / {max}
+        </span>
+      </span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inputCls} />
+      {hint && <span className="text-[11px] text-slate-400 mt-1 block">{hint}</span>}
     </label>
   );
 }

@@ -2,10 +2,13 @@ import {
   adminLoginService,
   createAdminService,
   sendToken,
+  listStaffService,
+  updateStaffPermissionsService,
 } from './admin.services.js';
 import * as StatsService from './admin.stats.service.js';
 import * as CustomersService from './admin.customers.service.js';
 import * as OrdersService from './admin.orders.service.js';
+import { PERMISSION_GROUPS } from '../permissions/permissions.js';
 
 // ---------------------------
 // Admin login
@@ -45,6 +48,23 @@ export const createAdmin = async (req, res) => {
       role: newAdmin.role,
     },
   });
+};
+
+// ---------------------------
+// Permissions catalogue & staff management
+// ---------------------------
+export const listPermissions = async (_req, res) => {
+  res.status(200).json({ status: 'success', data: PERMISSION_GROUPS });
+};
+
+export const listStaff = async (_req, res) => {
+  const staff = await listStaffService();
+  res.status(200).json({ status: 'success', results: staff.length, data: staff });
+};
+
+export const updateStaffPermissions = async (req, res) => {
+  const updated = await updateStaffPermissionsService(req.params.id, req.body.permissions);
+  res.status(200).json({ status: 'success', message: 'Permissions updated', data: updated });
 };
 
 // ---------------------------
@@ -97,7 +117,14 @@ export const getOrder = async (req, res) => {
 };
 
 export const updateOrderStatus = async (req, res) => {
-  const { status, trackingCompany, trackingLink, trackingId } = req.body;
-  const order = await OrdersService.updateOrderStatus(req.params.id, status, trackingCompany, trackingLink, trackingId);
+  const { status, trackingCompany, trackingLink, trackingId, shippedItemIndexes } = req.body;
+  const order = await OrdersService.updateOrderStatus(
+    req.params.id,
+    status,
+    trackingCompany,
+    trackingLink,
+    trackingId,
+    shippedItemIndexes
+  );
   res.status(200).json({ status: 'success', message: 'Order status updated', data: order });
 };

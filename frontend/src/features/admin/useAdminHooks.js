@@ -101,8 +101,14 @@ export const useAdminOrders = (params = {}) => {
 export const useUpdateOrderStatus = () => {
     const qc = useQueryClient();
     return useMutation({
-        mutationFn: async ({ id, status, trackingCompany, trackingLink, trackingId }) => {
-            const { data } = await axiosClient.patch(`/admin/orders/${id}/status`, { status, trackingCompany, trackingLink, trackingId });
+        mutationFn: async ({ id, status, trackingCompany, trackingLink, trackingId, shippedItemIndexes }) => {
+            const { data } = await axiosClient.patch(`/admin/orders/${id}/status`, {
+                status,
+                trackingCompany,
+                trackingLink,
+                trackingId,
+                shippedItemIndexes,
+            });
             return data.data;
         },
         onSuccess: () => {

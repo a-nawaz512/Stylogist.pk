@@ -37,7 +37,8 @@ export const createBrand = async (data) => {
   const existing = await Brand.findOne({ name: data.name });
   if (existing) throw new ApiError(409, "A brand with this name already exists");
 
-  const slug = await generateUniqueSlug(Brand, data.name);
+  const slugSeed = (data.slug && data.slug.trim()) || data.name;
+  const slug = await generateUniqueSlug(Brand, slugSeed);
   return Brand.create({ ...data, slug });
 };
 
@@ -45,14 +46,23 @@ export const updateBrand = async (id, data) => {
   const brand = await Brand.findById(id);
   if (!brand) throw new ApiError(404, "Brand not found");
 
-  // If name changed, regenerate slug (unique; exclude self).
-  if (data.name && data.name !== brand.name) {
-    const dupe = await Brand.findOne({ name: data.name, _id: { $ne: id } });
+  const { slug: nextSlug, ...rest } = data;
+
+  // If name changed, regenerate slug (unique; exclude self) unless an
+  // explicit slug override is also provided.
+  if (rest.name && rest.name !== brand.name) {
+    const dupe = await Brand.findOne({ name: rest.name, _id: { $ne: id } });
     if (dupe) throw new ApiError(409, "A brand with this name already exists");
-    brand.slug = await generateUniqueSlug(Brand, data.name, id);
+    if (!nextSlug) {
+      brand.slug = await generateUniqueSlug(Brand, rest.name, id);
+    }
   }
 
-  Object.assign(brand, data);
+  if (nextSlug && nextSlug.trim() && nextSlug.trim() !== brand.slug) {
+    brand.slug = await generateUniqueSlug(Brand, nextSlug.trim(), id);
+  }
+
+  Object.assign(brand, rest);
   await brand.save();
   return brand.toObject();
 };

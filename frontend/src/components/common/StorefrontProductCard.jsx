@@ -139,13 +139,19 @@ export default function StorefrontProductCard({
           )}
         </div>
         {product.averageRating > 0 && (
-          <div className="flex justify-center items-center gap-0.5 mt-2.5">
-            {[...Array(5)].map((_, i) => (
-              <FaStar
-                key={i}
-                className={`w-2.5 h-2.5 ${i < Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-200'}`}
-              />
-            ))}
+          <div className="flex justify-center items-center gap-1.5 mt-2.5">
+            <div className="flex items-center gap-0.5" aria-label={`${product.averageRating.toFixed(1)} out of 5 stars`}>
+              {[...Array(5)].map((_, i) => (
+                <FaStar
+                  key={i}
+                  className={`w-2.5 h-2.5 ${i < Math.round(product.averageRating) ? 'text-yellow-400' : 'text-gray-200'}`}
+                />
+              ))}
+            </div>
+            <span className="text-[10px] font-semibold text-slate-500 tabular-nums">
+              {product.averageRating.toFixed(1)}
+              {product.totalReviews ? ` (${product.totalReviews})` : ''}
+            </span>
           </div>
         )}
 

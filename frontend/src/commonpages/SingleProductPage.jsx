@@ -36,19 +36,21 @@ export default function ProductDetailsPage() {
 
   const sizes = useMemo(() => uniq(variants.map((v) => v.size).filter(Boolean)), [variants]);
   const colors = useMemo(() => uniq(variants.map((v) => v.color).filter(Boolean)), [variants]);
+  const packSizes = useMemo(() => uniq(variants.map((v) => v.packSize).filter(Boolean)), [variants]);
 
   const [activeImage, setActiveImage] = useState(null);
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [selectedPackSize, setSelectedPackSize] = useState(null);
   const [quantity, setQuantity] = useState(1);
-  const [tab, setTab] = useState('description');
 
   // Hydrate defaults once we know the product + variants.
   useEffect(() => {
     if (images.length) setActiveImage(images[0]);
     if (sizes.length) setSelectedSize((prev) => prev || sizes[0]);
     if (colors.length) setSelectedColor((prev) => prev || colors[0]);
-  }, [images, sizes, colors]);
+    if (packSizes.length) setSelectedPackSize((prev) => prev || packSizes[0]);
+  }, [images, sizes, colors, packSizes]);
 
   const seoTitle = product?.metaTitle?.trim() || (product ? `${product.name} | Stylogist` : '');
   const seoDescription = product
@@ -63,10 +65,13 @@ export default function ProductDetailsPage() {
       variants.find((v) => {
         const sizeOk = sizes.length ? v.size === selectedSize : true;
         const colorOk = colors.length ? v.color === selectedColor : true;
-        return sizeOk && colorOk;
+        const packOk = packSizes.length ? v.packSize === selectedPackSize : true;
+        return sizeOk && colorOk && packOk;
       }) || variants[0]
     );
-  }, [variants, selectedSize, selectedColor, sizes.length, colors.length]);
+  }, [variants, selectedSize, selectedColor, selectedPackSize, sizes.length, colors.length, packSizes.length]);
+
+  const variantIngredients = (v) => v?.ingredients || v?.material || '';
 
   const stock = matchedVariant?.stock ?? 0;
   const outOfStock = stock <= 0;
@@ -75,6 +80,17 @@ export default function ProductDetailsPage() {
     if (!product) return null;
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
     const anyInStock = variants.some((v) => (v.stock ?? 0) > 0);
+
+    // Pick the right Schema.org GTIN property based on length so Google
+    // accepts the barcode for rich Shopping results.
+    const barcode = (product.barcode || '').replace(/\D/g, '');
+    const gtinKey =
+      barcode.length === 8 ? 'gtin8'
+        : barcode.length === 12 ? 'gtin12'
+          : barcode.length === 13 ? 'gtin13'
+            : barcode.length === 14 ? 'gtin14'
+              : barcode ? 'gtin' : null;
+
     const offers = variants.length
       ? variants.map((v) => ({
         '@type': 'Offer',
@@ -89,13 +105,15 @@ export default function ProductDetailsPage() {
         url: canonicalUrl,
       }))
       : undefined;
-    return {
+
+    const json = {
       '@context': 'https://schema.org',
       '@type': 'Product',
       name: product.name,
       description: seoDescription,
       image: images,
       sku: matchedVariant?.sku || undefined,
+      mpn: matchedVariant?.sku || undefined,
       brand: product.brand?.name ? { '@type': 'Brand', name: product.brand.name } : undefined,
       category: product.category?.name || undefined,
       url: canonicalUrl,
@@ -117,7 +135,48 @@ export default function ProductDetailsPage() {
         url: canonicalUrl,
       },
     };
+
+    if (gtinKey) json[gtinKey] = barcode;
+
+    // Promote the structured supplement-style attributes (form, dosage, age
+    // range) into Schema.org additionalProperty entries so Google can index
+    // them under product spec snippets.
+    const additional = [];
+    const id = product.itemDetails || {};
+    if (id.itemForm) additional.push({ '@type': 'PropertyValue', name: 'Item form', value: id.itemForm });
+    if (id.containerType) additional.push({ '@type': 'PropertyValue', name: 'Container type', value: id.containerType });
+    if (id.ageRange) additional.push({ '@type': 'PropertyValue', name: 'Age range', value: id.ageRange });
+    if (id.dosageForm) additional.push({ '@type': 'PropertyValue', name: 'Dosage form', value: id.dosageForm });
+    if (additional.length) json.additionalProperty = additional;
+
+    return json;
   }, [product, variants, images, matchedVariant, seoDescription]);
+
+  const breadcrumbJsonLd = useMemo(() => {
+    if (!product) return null;
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const items = [
+      { name: 'Home', item: `${origin}/` },
+      { name: 'Shop', item: `${origin}/category` },
+    ];
+    if (product.category?.slug) {
+      items.push({ name: product.category.name, item: `${origin}/category/${product.category.slug}` });
+    }
+    if (product.brand?.slug) {
+      items.push({ name: product.brand.name, item: `${origin}/brand/${product.brand.slug}` });
+    }
+    items.push({ name: product.name, item: `${origin}/product/${product.slug}` });
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: items.map((it, idx) => ({
+        '@type': 'ListItem',
+        position: idx + 1,
+        name: it.name,
+        item: it.item,
+      })),
+    };
+  }, [product]);
 
   const lowStock = !outOfStock && stock <= 5;
 
@@ -150,6 +209,7 @@ export default function ProductDetailsPage() {
       image: images[0] || null,
       size: matchedVariant.size,
       color: matchedVariant.color,
+      packSize: matchedVariant.packSize,
     });
     toast.success('Added to cart');
   };
@@ -168,6 +228,7 @@ export default function ProductDetailsPage() {
       image: images[0] || null,
       size: matchedVariant.size,
       color: matchedVariant.color,
+      packSize: matchedVariant.packSize,
     });
     navigate('/checkout');
   };
@@ -218,10 +279,20 @@ export default function ProductDetailsPage() {
         description={seoDescription}
         image={images[0]}
         type="product"
-        canonical={typeof window !== 'undefined' ? window.location.href : undefined}
+        canonical={
+          typeof window !== 'undefined'
+            ? `${window.location.origin}/product/${product.slug}`
+            : undefined
+        }
         jsonLd={productJsonLd}
         jsonLdId={`product-${product?._id}`}
       />
+      {breadcrumbJsonLd && (
+        <Seo
+          jsonLd={breadcrumbJsonLd}
+          jsonLdId={`breadcrumb-${product?._id}`}
+        />
+      )}
       {/* Top announcement bar */}
       <div className="bg-[#222] text-white">
         <div className="max-w-7xl mx-auto px-4 md:px-8 py-2.5 flex flex-wrap items-center justify-center gap-x-8 gap-y-1.5 text-[10px] font-black uppercase tracking-[0.25em]">
@@ -239,15 +310,33 @@ export default function ProductDetailsPage() {
         </div>
       </div>
 
-      {/* Breadcrumb */}
+      {/* Breadcrumb — internal links into category & brand also lift PageRank
+          to those listings. The same structure is emitted as BreadcrumbList
+          JSON-LD via the <Seo /> jsonLdId="breadcrumb" instance below. */}
       <div className="max-w-7xl mx-auto px-4 md:px-8 py-5">
-        <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-semibold">
+        <nav aria-label="Breadcrumb" className="flex items-center flex-wrap gap-1.5 text-[10px] uppercase tracking-[0.2em] text-gray-500 font-semibold">
           <Link to="/" className="hover:text-[#007074]">Home</Link>
           <FiChevronRight size={11} />
           <Link to="/category" className="hover:text-[#007074]">Shop</Link>
+          {product.category?.slug && (
+            <>
+              <FiChevronRight size={11} />
+              <Link to={`/category/${product.category.slug}`} className="hover:text-[#007074]">
+                {product.category.name}
+              </Link>
+            </>
+          )}
+          {product.brand?.slug && (
+            <>
+              <FiChevronRight size={11} />
+              <Link to={`/brand/${product.brand.slug}`} className="hover:text-[#007074]">
+                {product.brand.name}
+              </Link>
+            </>
+          )}
           <FiChevronRight size={11} />
           <span className="text-[#222] truncate">{product.name}</span>
-        </div>
+        </nav>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 pb-16 grid grid-cols-1 lg:grid-cols-12 gap-10">
@@ -412,6 +501,29 @@ export default function ProductDetailsPage() {
             </div>
           )}
 
+          {packSizes.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Pack size</span>
+                <span className="text-[10px] uppercase tracking-[0.15em] text-gray-500 font-semibold">{selectedPackSize || '—'}</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {packSizes.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setSelectedPackSize(p)}
+                    className={`min-w-[64px] px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.15em] border transition-all ${selectedPackSize === p
+                      ? 'bg-[#222] text-white border-[#222] shadow-sm'
+                      : 'bg-white text-[#222] border-gray-200 hover:border-[#222]'
+                      }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Quantity + stock status */}
           <div>
             <div className="flex items-center justify-between mb-2">
@@ -564,7 +676,7 @@ export default function ProductDetailsPage() {
       {/* Tabs / Bottom Sections */}
       <div className="max-w-5xl mx-auto px-4 md:px-8 pb-20 space-y-16">
 
-        {/* ✅ DESCRIPTION (ANIMATED) */}
+        {/* DESCRIPTION */}
         <ScrollReveal as="section">
           <h2 className="text-xl font-bold text-[#222] mb-4">Product Details</h2>
           {product.description ? (
@@ -577,12 +689,80 @@ export default function ProductDetailsPage() {
           )}
         </ScrollReveal>
 
-        {/* ✅ KEY HIGHLIGHTS (ANIMATED) */}
+        {/* BENEFITS — semantic <h2> + <ul> for both readers and crawlers. */}
+        {Array.isArray(product.benefits) && product.benefits.length > 0 && (
+          <ScrollReveal as="section">
+            <h2 className="text-xl font-bold text-[#222] mb-4">Benefits</h2>
+            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {product.benefits.map((b, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-3 bg-white border border-gray-100 rounded-xl px-4 py-3 text-sm text-gray-700"
+                >
+                  <span className="mt-0.5 text-[#007074]"><FiCheck size={14} /></span>
+                  <span className="leading-relaxed">{b}</span>
+                </li>
+              ))}
+            </ul>
+          </ScrollReveal>
+        )}
+
+        {/* USES */}
+        {Array.isArray(product.uses) && product.uses.length > 0 && (
+          <ScrollReveal as="section">
+            <h2 className="text-xl font-bold text-[#222] mb-4">Uses</h2>
+            <ul className="space-y-2">
+              {product.uses.map((u, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-start gap-3 text-sm text-gray-700"
+                >
+                  <span className="mt-1 w-5 h-5 rounded-full bg-[#007074]/10 text-[#007074] text-[10px] font-bold flex items-center justify-center shrink-0">
+                    {idx + 1}
+                  </span>
+                  <span className="leading-relaxed">{u}</span>
+                </li>
+              ))}
+            </ul>
+          </ScrollReveal>
+        )}
+
+        {/* ITEM DETAILS — structured spec table fed by product.itemDetails. */}
+        {product.itemDetails && Object.values(product.itemDetails).some((v) => (v || '').trim()) && (
+          <ScrollReveal as="section">
+            <h2 className="text-xl font-bold text-[#222] mb-4">Item Details</h2>
+            <div className="overflow-hidden border border-gray-100 rounded-xl">
+              <table className="w-full text-sm">
+                <tbody className="divide-y divide-gray-100">
+                  {product.itemDetails.itemForm && (
+                    <ItemDetailRow label="Item form" value={product.itemDetails.itemForm} />
+                  )}
+                  {product.itemDetails.containerType && (
+                    <ItemDetailRow label="Container type" value={product.itemDetails.containerType} />
+                  )}
+                  {product.itemDetails.ageRange && (
+                    <ItemDetailRow label="Age range (description)" value={product.itemDetails.ageRange} />
+                  )}
+                  {product.itemDetails.dosageForm && (
+                    <ItemDetailRow label="Dosage form" value={product.itemDetails.dosageForm} />
+                  )}
+                  {product.barcode && (
+                    <ItemDetailRow label="Barcode (GTIN)" value={product.barcode} />
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </ScrollReveal>
+        )}
+
+        {/* KEY HIGHLIGHTS */}
         <ScrollReveal as="section">
           <h2 className="text-xl font-bold text-[#222] mb-4">Key Highlights</h2>
           <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
             {product.brand?.name && <li>✔ Brand: {product.brand.name}</li>}
-            {matchedVariant?.material && <li>✔ Material: {matchedVariant.material}</li>}
+            {variantIngredients(matchedVariant) && (
+              <li>✔ Ingredients: {variantIngredients(matchedVariant)}</li>
+            )}
             {matchedVariant?.weight && <li>✔ Weight: {matchedVariant.weight}g</li>}
             <li>✔ Total Stock: {product.totalStock ?? 0}</li>
             <li>✔ Variants: {variants.length}</li>
@@ -590,18 +770,17 @@ export default function ProductDetailsPage() {
           </ul>
         </ScrollReveal>
 
-        {/* ✅ SPECIFICATIONS (ANIMATED) */}
+        {/* SPECIFICATIONS */}
         <ScrollReveal as="section">
           <h2 className="text-xl font-bold text-[#222] mb-4">Specifications</h2>
           <ul className="divide-y divide-gray-100 text-sm">
             <SpecRow label="Brand" value={product.brand?.name || '—'} />
-            {matchedVariant?.material && (
-              <SpecRow label="Material" value={matchedVariant.material} />
+            {variantIngredients(matchedVariant) && (
+              <SpecRow label="Ingredients" value={variantIngredients(matchedVariant)} />
             )}
             {matchedVariant?.weight && (
               <SpecRow label="Weight" value={`${matchedVariant.weight}g`} />
             )}
-            {/* <SpecRow label="Total Stock" value={product.totalStock ?? 0} /> */}
             <SpecRow label="Variants" value={variants.length} />
             <SpecRow
               label="Price"
@@ -614,7 +793,7 @@ export default function ProductDetailsPage() {
           </ul>
         </ScrollReveal>
 
-        {/* ✅ VARIANTS TABLE (ANIMATED) */}
+        {/* VARIANTS TABLE */}
         {variants.length > 0 && (
           <ScrollReveal as="section">
             <h2 className="text-xl font-bold text-[#222] mb-4">Available Variants</h2>
@@ -624,7 +803,9 @@ export default function ProductDetailsPage() {
                   <tr>
                     <th className="text-left px-4 py-3">SKU</th>
                     <th className="text-left px-4 py-3">Size</th>
+                    <th className="text-left px-4 py-3">Pack</th>
                     <th className="text-left px-4 py-3">Color</th>
+                    <th className="text-left px-4 py-3">Ingredients</th>
                     <th className="text-right px-4 py-3">Price</th>
                     <th className="text-right px-4 py-3">Stock</th>
                   </tr>
@@ -634,7 +815,9 @@ export default function ProductDetailsPage() {
                     <tr key={v._id || v.sku}>
                       <td className="px-4 py-3 font-mono text-xs">{v.sku || '—'}</td>
                       <td className="px-4 py-3 capitalize">{v.size || '—'}</td>
+                      <td className="px-4 py-3">{v.packSize || '—'}</td>
                       <td className="px-4 py-3 capitalize">{v.color || '—'}</td>
+                      <td className="px-4 py-3 text-xs text-gray-500">{variantIngredients(v) || '—'}</td>
                       <td className="px-4 py-3 text-right font-semibold">
                         {fmtPKR(v.salePrice)}
                       </td>
@@ -732,6 +915,20 @@ const SpecRow = memo(function SpecRow({ label, value }) {
       <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500">{label}</span>
       <span className="text-[#222] font-semibold text-right">{value}</span>
     </li>
+  );
+});
+
+const ItemDetailRow = memo(function ItemDetailRow({ label, value }) {
+  return (
+    <tr>
+      <th
+        scope="row"
+        className="text-left px-4 py-3 bg-gray-50 text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 w-1/3"
+      >
+        {label}
+      </th>
+      <td className="px-4 py-3 text-sm text-[#222] font-semibold">{value}</td>
+    </tr>
   );
 });
 

@@ -5,14 +5,26 @@ const objectId = /^[0-9a-fA-F]{24}$/;
 const variantSchema = z.object({
   sku: z.string().trim().optional(),
   size: z.string().trim().optional(),
+  packSize: z.string().trim().optional(),
   color: z.string().trim().optional(),
+  // `material` is accepted for backwards compatibility with old admin clients
+  // but is normalized to `ingredients` in the service layer.
+  ingredients: z.string().trim().optional(),
   material: z.string().trim().optional(),
   originalPrice: z.number().nonnegative("Original price cannot be negative"),
   salePrice: z.number().nonnegative("Sale price cannot be negative"),
   discountPercentage: z.number().min(0).max(100).optional(),
   stock: z.number().int().nonnegative("Stock cannot be negative"),
   weight: z.number().nonnegative().optional(),
+  isActive: z.boolean().optional(),
 });
+
+const itemDetailsSchema = z.object({
+  itemForm: z.string().trim().optional(),
+  containerType: z.string().trim().optional(),
+  ageRange: z.string().trim().optional(),
+  dosageForm: z.string().trim().optional(),
+}).optional();
 
 const mediaSchema = z.object({
   url: z.string().url("Media url must be a valid URL"),
@@ -32,8 +44,12 @@ export const createProductSchema = z.object({
     slug: z.string().trim().optional(),
     description: z.string().min(5, "Description is required").trim(),
     shortDescription: z.string().trim().optional(),
-    metaTitle: z.string().trim().optional(),
-    metaDescription: z.string().trim().optional(),
+    metaTitle: z.string().trim().max(60, "Meta title must be 60 characters or fewer").optional(),
+    metaDescription: z.string().trim().max(160, "Meta description must be 160 characters or fewer").optional(),
+    barcode: z.string().trim().max(64).optional(),
+    benefits: z.array(z.string().trim().min(1)).optional(),
+    uses: z.array(z.string().trim().min(1)).optional(),
+    itemDetails: itemDetailsSchema,
     category: z.string().regex(objectId, "Invalid category id"),
     categories: z.array(z.string().regex(objectId, "Invalid category id")).optional(),
     subCategory: z.string().regex(objectId, "Invalid subCategory id").optional().nullable(),
@@ -59,8 +75,12 @@ export const updateProductSchema = z.object({
     slug: z.string().trim().optional(),
     description: z.string().min(5).trim().optional(),
     shortDescription: z.string().trim().optional(),
-    metaTitle: z.string().trim().optional(),
-    metaDescription: z.string().trim().optional(),
+    metaTitle: z.string().trim().max(60).optional(),
+    metaDescription: z.string().trim().max(160).optional(),
+    barcode: z.string().trim().max(64).optional(),
+    benefits: z.array(z.string().trim().min(1)).optional(),
+    uses: z.array(z.string().trim().min(1)).optional(),
+    itemDetails: itemDetailsSchema,
     category: z.string().regex(objectId).optional(),
     categories: z.array(z.string().regex(objectId)).optional(),
     subCategory: z.string().regex(objectId).optional().nullable(),

@@ -51,7 +51,7 @@ export const authMiddleware = catchAsync(async (req, res, next) => {
 
   // 4️⃣ Check if user still exists
   const currentUser = await User.findById(decoded.id).select(
-    "_id role passwordChangedAt isBlocked"
+    "_id role permissions passwordChangedAt isBlocked"
   );
 
   if (!currentUser) {
@@ -83,6 +83,7 @@ export const authMiddleware = catchAsync(async (req, res, next) => {
   req.user = {
     id: currentUser._id,
     role: currentUser.role,
+    permissions: currentUser.permissions || [],
   };
 
   next();

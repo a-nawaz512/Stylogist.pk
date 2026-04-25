@@ -100,7 +100,9 @@ export const createCategory = async (data) => {
     payload.level = 0;
   }
 
-  payload.slug = await generateUniqueSlug(Category, payload.name);
+  // Allow the admin to override the slug. Falls back to slugifying the name.
+  const slugSeed = (payload.slug && payload.slug.trim()) || payload.name;
+  payload.slug = await generateUniqueSlug(Category, slugSeed);
   return Category.create(payload);
 };
 
@@ -127,11 +129,20 @@ export const updateCategory = async (id, data) => {
   }
 
   if (data.name && data.name !== category.name) {
-    category.slug = await generateUniqueSlug(Category, data.name, id);
     category.name = data.name;
+    // Regenerate slug from the new name unless an explicit slug is supplied below.
+    if (!data.slug) {
+      category.slug = await generateUniqueSlug(Category, data.name, id);
+    }
+  }
+
+  if (data.slug && data.slug.trim() && data.slug.trim() !== category.slug) {
+    category.slug = await generateUniqueSlug(Category, data.slug.trim(), id);
   }
 
   if (data.description !== undefined) category.description = data.description;
+  if (data.metaTitle !== undefined) category.metaTitle = data.metaTitle;
+  if (data.metaDescription !== undefined) category.metaDescription = data.metaDescription;
   if (data.image !== undefined) category.image = data.image || null;
   if (data.isActive !== undefined) category.isActive = data.isActive;
 

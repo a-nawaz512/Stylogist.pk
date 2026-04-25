@@ -111,7 +111,7 @@ function WishlistRow({ item, onRemove, onView }) {
           className="w-16 h-16 md:w-14 md:h-14 bg-slate-100 rounded-md overflow-hidden flex-shrink-0"
         >
           {item.image ? (
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+            <img src={item.image} alt={item.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-slate-300">
               <FiPackage size={18} />

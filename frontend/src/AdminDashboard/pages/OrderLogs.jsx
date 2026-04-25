@@ -5,7 +5,9 @@ import {
 } from 'react-icons/fi';
 import { useAdminOrders, useUpdateOrderStatus } from '../../features/admin/useAdminHooks';
 
-const STATUSES = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled', 'returned'];
+const STATUSES = ['pending', 'confirmed', 'shipped', 'partially_shipped', 'delivered', 'cancelled', 'returned'];
+
+const SHIPMENT_STATUSES = new Set(['shipped', 'partially_shipped']);
 const PAGE_SIZE = 25;
 
 const fmtPKR = (n) => `Rs ${Math.round(n || 0).toLocaleString()}`;
@@ -213,6 +215,7 @@ function StatusBadge({ status }) {
     pending: { cls: 'bg-amber-50 text-amber-700 border-amber-100', icon: <FiClock size={11} /> },
     confirmed: { cls: 'bg-blue-50 text-blue-700 border-blue-100', icon: <FiCheckCircle size={11} /> },
     shipped: { cls: 'bg-violet-50 text-violet-700 border-violet-100', icon: <FiTruck size={11} /> },
+    partially_shipped: { cls: 'bg-fuchsia-50 text-fuchsia-700 border-fuchsia-100', icon: <FiTruck size={11} /> },
     delivered: { cls: 'bg-emerald-50 text-emerald-700 border-emerald-100', icon: <FiCheckCircle size={11} /> },
     cancelled: { cls: 'bg-slate-100 text-slate-500 border-slate-200', icon: <FiXCircle size={11} /> },
     returned: { cls: 'bg-rose-50 text-rose-700 border-rose-100', icon: <FiXCircle size={11} /> },
@@ -221,7 +224,7 @@ function StatusBadge({ status }) {
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${s.cls}`}>
       {s.icon}
-      {status}
+      {(status || '').replace(/_/g, ' ')}
     </span>
   );
 }
@@ -229,6 +232,9 @@ function StatusBadge({ status }) {
 function OrderDetailModal({ order, onClose }) {
   const updateMut = useUpdateOrderStatus();
   const [pendingStatus, setPendingStatus] = useState(null);
+  // When the admin picks a shipping status, we open a confirmation modal that
+  // lets them tick exactly which line items are going out in this shipment.
+  const [shipmentDraft, setShipmentDraft] = useState(null); // { status, indexes }
 
   // New State for tracking details
   const [trackingCompany, setTrackingCompany] = useState(order.trackingCompany || '');
@@ -257,6 +263,17 @@ function OrderDetailModal({ order, onClose }) {
   // Updates both status AND tracking info
   const onChange = async (newStatus) => {
     if (newStatus === order.status) return;
+
+    // Shipping transitions open a per-item picker so the admin can dispatch
+    // partial shipments. Default selection: items not already shipped.
+    if (SHIPMENT_STATUSES.has(newStatus)) {
+      const defaultIndexes = (order.items || [])
+        .map((it, idx) => (it.shipped ? null : idx))
+        .filter((v) => v !== null);
+      setShipmentDraft({ status: newStatus, indexes: defaultIndexes });
+      return;
+    }
+
     setPendingStatus(newStatus);
     try {
       await updateMut.mutateAsync({
@@ -266,6 +283,25 @@ function OrderDetailModal({ order, onClose }) {
         trackingLink: trackingLink.trim(),
         trackingId: trackingId.trim()
       });
+      onClose();
+    } catch { /* hook toast */ }
+    finally { setPendingStatus(null); }
+  };
+
+  const onConfirmShipment = async () => {
+    if (!shipmentDraft) return;
+    if (!shipmentDraft.indexes.length) return;
+    setPendingStatus(shipmentDraft.status);
+    try {
+      await updateMut.mutateAsync({
+        id: order._id,
+        status: shipmentDraft.status,
+        trackingCompany: trackingCompany.trim(),
+        trackingLink: trackingLink.trim(),
+        trackingId: trackingId.trim(),
+        shippedItemIndexes: shipmentDraft.indexes,
+      });
+      setShipmentDraft(null);
       onClose();
     } catch { /* hook toast */ }
     finally { setPendingStatus(null); }
@@ -333,9 +369,16 @@ function OrderDetailModal({ order, onClose }) {
           <Panel title="Items" icon={<FiPackage size={14} />}>
             <div className="divide-y divide-slate-100 -mx-3">
               {(order.items || []).map((it, idx) => (
-                <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm">
-                  <div className="min-w-0">
-                    <div className="text-slate-800 truncate">{it.name}</div>
+                <div key={idx} className="flex items-center justify-between px-3 py-2 text-sm gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-slate-800 truncate flex items-center gap-2">
+                      {it.name}
+                      {it.shipped && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 px-1.5 py-0.5 rounded-full">
+                          <FiTruck size={9} /> Shipped
+                        </span>
+                      )}
+                    </div>
                     <div className="text-xs text-slate-400">SKU {it.sku} · qty {it.quantity}</div>
                   </div>
                   <div className="text-slate-700 tabular-nums ml-3 flex-shrink-0">
@@ -412,7 +455,7 @@ function OrderDetailModal({ order, onClose }) {
                       : 'bg-white text-slate-700 border-slate-200 hover:border-[#007074] hover:text-[#007074]'
                       } disabled:opacity-60 disabled:cursor-not-allowed`}
                   >
-                    {s}
+                    {s.replace(/_/g, ' ')}
                     {isPending ? (
                       <FiLoader className="animate-spin" size={12} />
                     ) : isCurrent ? (
@@ -424,6 +467,139 @@ function OrderDetailModal({ order, onClose }) {
             </div>
           </Panel>
         </div>
+      </div>
+
+      {shipmentDraft && (
+        <ShipmentPickerModal
+          order={order}
+          draft={shipmentDraft}
+          onChange={setShipmentDraft}
+          onCancel={() => setShipmentDraft(null)}
+          onConfirm={onConfirmShipment}
+          submitting={updateMut.isPending}
+        />
+      )}
+    </div>
+  );
+}
+
+function ShipmentPickerModal({ order, draft, onChange, onCancel, onConfirm, submitting }) {
+  const items = order.items || [];
+  const selected = new Set(draft.indexes);
+  const totalSelectable = items.filter((it) => !it.shipped).length;
+  const willShipAll = selected.size === totalSelectable && totalSelectable > 0;
+
+  const toggle = (idx) => {
+    const next = new Set(selected);
+    if (next.has(idx)) next.delete(idx);
+    else next.add(idx);
+    // Keep status in sync — selecting every remaining item promotes to "shipped".
+    const promoted = next.size === totalSelectable ? 'shipped' : 'partially_shipped';
+    onChange({ status: promoted, indexes: [...next].sort((a, b) => a - b) });
+  };
+
+  const toggleAll = () => {
+    if (willShipAll) {
+      onChange({ status: 'partially_shipped', indexes: [] });
+    } else {
+      const allIdx = items
+        .map((it, idx) => (it.shipped ? null : idx))
+        .filter((v) => v !== null);
+      onChange({ status: 'shipped', indexes: allIdx });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onCancel} />
+      <div className="relative bg-white w-full max-w-lg rounded-xl shadow-xl overflow-hidden max-h-[85vh] flex flex-col">
+        <header className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#007074] text-white flex items-center justify-center">
+              <FiTruck size={16} />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-slate-900">Select items to ship</h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Tick the items going out. Status will be set to{' '}
+                <span className="font-semibold text-[#007074]">{draft.status.replace(/_/g, ' ')}</span>.
+              </p>
+            </div>
+          </div>
+          <button onClick={onCancel} className="w-8 h-8 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 inline-flex items-center justify-center">
+            <FiX size={16} />
+          </button>
+        </header>
+
+        <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+          <button
+            type="button"
+            onClick={toggleAll}
+            disabled={totalSelectable === 0}
+            className="text-xs font-medium text-[#007074] hover:underline disabled:opacity-40"
+          >
+            {willShipAll ? 'Deselect all' : 'Select all unshipped'}
+          </button>
+          <span className="text-[11px] text-slate-500">
+            {selected.size} of {totalSelectable} selected
+          </span>
+        </div>
+
+        <div className="overflow-y-auto p-5 space-y-2">
+          {items.map((it, idx) => {
+            const alreadyShipped = !!it.shipped;
+            const isChecked = selected.has(idx);
+            return (
+              <label
+                key={idx}
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                  alreadyShipped
+                    ? 'bg-emerald-50/50 border-emerald-100 cursor-not-allowed'
+                    : isChecked
+                      ? 'bg-[#007074]/5 border-[#007074]/30'
+                      : 'bg-white border-slate-200 hover:border-slate-300 cursor-pointer'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  disabled={alreadyShipped}
+                  checked={alreadyShipped || isChecked}
+                  onChange={() => !alreadyShipped && toggle(idx)}
+                  className="w-4 h-4 accent-[#007074]"
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm text-slate-800 truncate flex items-center gap-2">
+                    {it.name}
+                    {alreadyShipped && (
+                      <span className="text-[10px] font-semibold text-emerald-700">Already shipped</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-400">SKU {it.sku} · qty {it.quantity}</div>
+                </div>
+                <div className="text-sm font-semibold text-slate-700 tabular-nums">
+                  {fmtPKR(it.subtotal ?? it.price * it.quantity)}
+                </div>
+              </label>
+            );
+          })}
+        </div>
+
+        <footer className="border-t border-slate-100 p-4 flex items-center justify-between gap-2">
+          <button
+            onClick={onCancel}
+            className="px-4 py-2 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={submitting || selected.size === 0}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#007074] text-white rounded-lg text-sm font-medium hover:bg-[#005a5d] disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {submitting && <FiLoader className="animate-spin" size={14} />}
+            Confirm shipment
+          </button>
+        </footer>
       </div>
     </div>
   );

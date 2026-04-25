@@ -15,6 +15,7 @@ import adminRoutes from './modules/admin/admin.routes.js';
 import uploadRoutes from './modules/uploads/upload.routes.js';
 import reviewRoutes from './modules/reviews/review.routes.js';
 import settingsRoutes from './modules/settings/settings.routes.js';
+import seoRoutes from './modules/seo/seo.routes.js';
 
 const app = express();
 
@@ -89,6 +90,10 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads'), {
 app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'success', message: 'Stylogist.pk API is running' });
 });
+
+// SEO routes — sitemap.xml and robots.txt at the app root so crawlers find
+// them at the conventional paths.
+app.use('/', seoRoutes);
 
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRoutes);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   useProducts,
@@ -10,7 +10,7 @@ import {
 import { useCategories } from '../../../features/categories/useCategoryHooks';
 import { useBrands } from '../../../features/brands/useBrandHooks';
 import { useUploadImage, useUploadImages } from '../../../features/uploads/useUploadHooks';
-import { emptyForm, emptyVariant, slugify } from './shared';
+import { emptyForm, emptyItemDetails, emptyVariant, slugify } from './shared';
 
 // All the controller-level state + handlers for the Product Manage page.
 // Keeps the top-level component presentational and lean.
@@ -22,6 +22,12 @@ export default function useProductManage() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [offcanvas, setOffcanvas] = useState(null);
+
+  // Tracks which product id has already had its server data hydrated into the
+  // form. Prevents the previous bug where a background refetch (window focus,
+  // mutation invalidation) would silently overwrite the admin's in-progress
+  // edits with the original server values.
+  const hydratedFor = useRef(null);
 
   const { data: productsResp, isLoading: loadingProducts } = useProducts({ status: statusFilter, limit: 100 });
   const { data: categories = [] } = useCategories({ active: 'all' });
@@ -52,9 +58,13 @@ export default function useProductManage() {
     );
   }, [products, search]);
 
-  // Hydrate the form whenever the edit-query resolves.
+  // Hydrate the form once per edit session. The ref guard ensures background
+  // refetches never overwrite the admin's in-progress edits.
   useEffect(() => {
-    if (!editingId || !editingProductData) return;
+    if (!editingId) return;
+    if (hydratedFor.current === editingId) return;
+    if (!editingProductData?.product) return;
+
     const { product, variants = [], media = [] } = editingProductData;
     const thumbDoc = media.find((m) => m.isThumbnail) || null;
     const gallery = media.filter((m) => !m.isThumbnail);
@@ -62,6 +72,7 @@ export default function useProductManage() {
     const existingCategories = Array.isArray(product.categories) && product.categories.length
       ? product.categories.map((c) => c?._id || c).filter(Boolean).map(String)
       : [primaryCategory, product.subCategory?._id || product.subCategory].filter(Boolean).map(String);
+
     setForm({
       name: product.name || '',
       slug: product.slug || '',
@@ -69,6 +80,13 @@ export default function useProductManage() {
       shortDescription: product.shortDescription || '',
       metaTitle: product.metaTitle || '',
       metaDescription: product.metaDescription || '',
+      barcode: product.barcode || '',
+      benefits: Array.isArray(product.benefits) ? [...product.benefits] : [],
+      uses: Array.isArray(product.uses) ? [...product.uses] : [],
+      itemDetails: {
+        ...emptyItemDetails(),
+        ...(product.itemDetails || {}),
+      },
       category: primaryCategory,
       categories: [...new Set(existingCategories)],
       brand: product.brand?._id || product.brand || '',
@@ -80,8 +98,10 @@ export default function useProductManage() {
         ? variants.map((v) => ({
           sku: v.sku || '',
           size: v.size || '',
+          packSize: v.packSize || '',
           color: v.color || '',
-          material: v.material || '',
+          // Read from `ingredients` first, fall back to legacy `material`.
+          ingredients: v.ingredients || v.material || '',
           originalPrice: v.originalPrice ?? '',
           salePrice: v.salePrice ?? '',
           stock: v.stock ?? '',
@@ -106,15 +126,22 @@ export default function useProductManage() {
         alt: m.alt || '',
       })),
     });
+
+    hydratedFor.current = editingId;
   }, [editingId, editingProductData]);
 
   const resetForm = () => {
     setForm(emptyForm);
     setEditingId(null);
     setView('list');
+    hydratedFor.current = null;
   };
 
   const startEdit = (product) => {
+    // Reset hydration marker so the next id gets a fresh hydration even if the
+    // cache still has the previous product's data.
+    hydratedFor.current = null;
+    setForm(emptyForm);
     setEditingId(product._id);
     setView('form');
   };
@@ -220,10 +247,11 @@ export default function useProductManage() {
     if (!form.category && !(form.categories?.length)) return toast.error('Select at least one category');
 
     const variants = form.variants.map((v) => ({
-      sku: v.sku.trim() || undefined,
-      size: v.size.trim() || undefined,
-      color: v.color.trim() || undefined,
-      material: v.material.trim() || undefined,
+      sku: (v.sku || '').trim() || undefined,
+      size: (v.size || '').trim() || undefined,
+      packSize: (v.packSize || '').trim() || undefined,
+      color: (v.color || '').trim() || undefined,
+      ingredients: (v.ingredients || '').trim() || undefined,
       originalPrice: Number(v.originalPrice),
       salePrice: Number(v.salePrice),
       stock: Number(v.stock),
@@ -235,6 +263,15 @@ export default function useProductManage() {
       }
     }
 
+    // Drop empty bullets so the server-side schema (which requires min(1))
+    // doesn't reject the whole array because of trailing blank rows.
+    const benefits = (form.benefits || []).map((s) => (s || '').trim()).filter(Boolean);
+    const uses = (form.uses || []).map((s) => (s || '').trim()).filter(Boolean);
+
+    const itemDetails = Object.fromEntries(
+      Object.entries(form.itemDetails || {}).map(([k, v]) => [k, (v || '').trim()])
+    );
+
     const payload = {
       name: form.name.trim(),
       slug: form.slug.trim() || undefined,
@@ -242,6 +279,10 @@ export default function useProductManage() {
       shortDescription: form.shortDescription.trim() || undefined,
       metaTitle: form.metaTitle.trim() || undefined,
       metaDescription: form.metaDescription.trim() || undefined,
+      barcode: (form.barcode || '').trim() || undefined,
+      benefits,
+      uses,
+      itemDetails,
       category: form.category || form.categories[0],
       categories: form.categories?.length ? form.categories : undefined,
       brand: form.brand || undefined,

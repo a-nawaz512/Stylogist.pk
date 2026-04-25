@@ -23,6 +23,7 @@ const CartPage = lazy(() => import('./commonpages/CartPage'))
 const WishlistPage = lazy(() => import('./commonpages/WishlistPage'))
 const CheckoutPage = lazy(() => import('./commonpages/checkoutPage'))
 const PageNotFound = lazy(() => import('./commonpages/PageNotFound'))
+const SearchResults = lazy(() => import('./commonpages/SearchResults'))
 const Login = lazy(() => import('./commonpages/Login'))
 const Signup = lazy(() => import('./commonpages/Signup'))
 const ForgotPassword = lazy(() => import('./commonpages/ForgotPassword'))
@@ -41,6 +42,7 @@ const RevenueAnalytics = lazy(() => import('./AdminDashboard/pages/RevenueAnalyt
 const CategoryManage = lazy(() => import('./AdminDashboard/pages/CategoryManage'))
 const BrandManage = lazy(() => import('./AdminDashboard/pages/BrandManage'))
 const AdminSettings = lazy(() => import('./AdminDashboard/pages/AdminSettings'))
+const StaffPermissions = lazy(() => import('./AdminDashboard/pages/StaffPermissions'))
 
 // Lightweight fallback while a lazy chunk is fetched. Uses the branded
 // double-ring spinner (see .brand-spinner in index.css) so the loading
@@ -128,6 +130,10 @@ const route = createBrowserRouter([
         element: <CategoryPage />
       },
       {
+        path: "/search",
+        element: <SearchResults />
+      },
+      {
         path: "/terms",
         element: <TermsPrivacy />
       },
@@ -194,6 +200,7 @@ const route = createBrowserRouter([
       { path: 'orders', element: <PageSuspense><OrderLogs /></PageSuspense> },
       { path: 'users', element: <PageSuspense><UserControl /></PageSuspense> },
       { path: 'reviews', element: <PageSuspense><ReviewManage /></PageSuspense> },
+      { path: 'staff', element: <PageSuspense><StaffPermissions /></PageSuspense> },
       { path: 'settings', element: <PageSuspense><AdminSettings /></PageSuspense> },
     ]
   },

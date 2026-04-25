@@ -11,7 +11,25 @@ import {
 import { useUploadImage } from '../../features/uploads/useUploadHooks';
 import toast from 'react-hot-toast';
 
-const emptyForm = { name: '', description: '', parent: '', image: '', isActive: true };
+const emptyForm = {
+  name: '',
+  slug: '',
+  description: '',
+  metaTitle: '',
+  metaDescription: '',
+  parent: '',
+  image: '',
+  isActive: true,
+};
+
+const slugify = (value) =>
+  (value || '')
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/['"’]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 export default function CategoryManage() {
   const [form, setForm] = useState(emptyForm);
@@ -72,7 +90,10 @@ export default function CategoryManage() {
     setEditing(cat);
     setForm({
       name: cat.name,
+      slug: cat.slug || '',
       description: cat.description || '',
+      metaTitle: cat.metaTitle || '',
+      metaDescription: cat.metaDescription || '',
       parent: cat.parent || '',
       image: cat.image || '',
       isActive: cat.isActive,
@@ -82,10 +103,15 @@ export default function CategoryManage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) return toast.error('Name is required');
+    if (form.metaTitle.length > 60) return toast.error('Meta title must be 60 characters or fewer');
+    if (form.metaDescription.length > 160) return toast.error('Meta description must be 160 characters or fewer');
 
     const payload = {
       name: form.name.trim(),
+      slug: form.slug.trim() || undefined,
       description: form.description.trim() || undefined,
+      metaTitle: form.metaTitle.trim() || undefined,
+      metaDescription: form.metaDescription.trim() || undefined,
       parent: form.parent || null,
       image: form.image || null,
       isActive: form.isActive,
@@ -167,15 +193,45 @@ export default function CategoryManage() {
               </select>
             </Field>
 
-            <Field label="Description">
+            <Field
+              label="Slug"
+              hint="URL segment — e.g. /category/womens-fashion. Auto-generated from name when blank."
+            >
+              <input
+                value={form.slug}
+                onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })}
+                placeholder={slugify(form.name) || 'womens-fashion'}
+                className={inputCls}
+              />
+            </Field>
+
+            <Field label="Description" hint="Rendered as a paragraph at the bottom of the public category page.">
               <textarea
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                rows={3}
-                placeholder="Short summary shown to shoppers"
+                rows={4}
+                placeholder="Curated wardrobe staples for every season…"
                 className={`${inputCls} resize-none`}
               />
             </Field>
+
+            <CountedField
+              label="Meta title"
+              hint="≤ 60 chars · keep unique per category"
+              value={form.metaTitle}
+              max={60}
+              onChange={(v) => setForm({ ...form, metaTitle: v })}
+              placeholder="Women's Fashion | Stylogist"
+            />
+
+            <CountedField
+              label="Meta description"
+              hint="≤ 160 chars · summarises the category for Google"
+              value={form.metaDescription}
+              max={160}
+              onChange={(v) => setForm({ ...form, metaDescription: v })}
+              placeholder="Shop women's fashion at Stylogist — dresses, tops, accessories…"
+            />
 
             <Field label="Image">
               <ImagePicker
@@ -328,6 +384,27 @@ function CategoryRow({ cat, expanded, onToggle, onEdit, onDelete, depth = 0 }) {
 
 const inputCls =
   'w-full bg-white border border-slate-200 rounded-lg py-2.5 px-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074] transition-colors';
+
+function CountedField({ label, hint, value, max, onChange, placeholder }) {
+  const used = (value || '').length;
+  const over = used > max;
+  return (
+    <label className="block">
+      <span className="flex items-center justify-between mb-1">
+        <span className="text-xs font-medium text-slate-600">{label}</span>
+        <span
+          className={`text-[10px] font-semibold tabular-nums ${
+            over ? 'text-red-500' : used > max * 0.9 ? 'text-amber-500' : 'text-slate-400'
+          }`}
+        >
+          {used} / {max}
+        </span>
+      </span>
+      <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className={inputCls} />
+      {hint && <span className="text-[11px] text-slate-400 mt-1 block">{hint}</span>}
+    </label>
+  );
+}
 
 function Field({ label, hint, required, children }) {
   return (

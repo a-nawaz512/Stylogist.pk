@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node --check src/modules/products/product.model.js)",
+      "Bash(node --check src/modules/products/product.service.js)",
+      "Bash(node --check src/modules/products/product.validation.js)",
+      "Bash(node --check src/modules/products/variant.model.js)",
+      "Bash(node --check src/modules/categories/category.model.js)",
+      "Bash(npx vite *)",
+      "Bash(node --check src/app.js)",
+      "Bash(node --check src/modules/admin/admin.routes.js)",
+      "Bash(node --check src/modules/admin/admin.controller.js)",
+      "Bash(node --check src/modules/admin/admin.services.js)",
+      "Bash(node --check src/modules/admin/admin.orders.service.js)"
+    ]
+  }
+}

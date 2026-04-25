@@ -33,14 +33,25 @@ export default function Seo({ title, description, image, type = 'website', canon
     setMeta('meta[name="twitter:title"]', 'content', title);
     setMeta('meta[name="twitter:description"]', 'content', description);
 
-    if (canonical) {
+    // Always emit a canonical so search engines never index two URLs (with
+    // and without query strings) as duplicates. Strip the query/hash so
+    // params like `?ref=…` don't fork the canonical surface.
+    let canonicalHref = canonical;
+    if (!canonicalHref && typeof window !== 'undefined') {
+      try {
+        const { origin, pathname } = window.location;
+        canonicalHref = `${origin}${pathname}`;
+      } catch { /* ignore */ }
+    }
+
+    if (canonicalHref) {
       let link = document.head.querySelector('link[rel="canonical"]');
       if (!link) {
         link = document.createElement('link');
         link.setAttribute('rel', 'canonical');
         document.head.appendChild(link);
       }
-      link.setAttribute('href', canonical);
+      link.setAttribute('href', canonicalHref);
     }
 
     if (jsonLd) {

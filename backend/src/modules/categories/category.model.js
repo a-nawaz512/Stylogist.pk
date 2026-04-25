@@ -17,6 +17,21 @@ const categorySchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    // SEO fields rendered into <title>/<meta> on the public category page and
+    // referenced by the sitemap generator. Capped at 60/160 chars in the
+    // validation layer to satisfy Google's snippet limits.
+    metaTitle: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 60,
+    },
+    metaDescription: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 160,
+    },
     parent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",

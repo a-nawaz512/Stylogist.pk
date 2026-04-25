@@ -25,6 +25,32 @@ const aggregateFromVariants = (variants) => {
   };
 };
 
+// Normalize a variant payload from the admin form. Folds the legacy `material`
+// field into `ingredients` so we can ship the rename without breaking older
+// clients still posting the old key.
+const normalizeVariant = (v) => {
+  const { material, ingredients, ...rest } = v;
+  return {
+    ...rest,
+    ingredients: (ingredients ?? material ?? "").toString().trim(),
+  };
+};
+
+// Strip HTML tags + collapse whitespace. Cheap (no DOM) — fine for short copy.
+const stripHtml = (html) =>
+  String(html ?? "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+
+// Build SEO defaults from the product. We only fill these in when the admin
+// left the corresponding field blank — explicit input always wins.
+const deriveSeoDefaults = ({ name, description, shortDescription, brandName }) => {
+  const title = brandName ? `${name} | ${brandName} | Stylogist` : `${name} | Stylogist`;
+  const blurb = stripHtml(shortDescription) || stripHtml(description);
+  return {
+    metaTitle: title.slice(0, 60),
+    metaDescription: blurb.slice(0, 160),
+  };
+};
+
 const buildMediaDocs = ({ thumbnail, media = [], productId, productSlug, metaTitle, metaDescription }) => {
   const docs = [];
   if (thumbnail?.url) {
@@ -59,7 +85,24 @@ const buildMediaDocs = ({ thumbnail, media = [], productId, productSlug, metaTit
 };
 
 export const createProduct = async (payload) => {
-  const { variants, media = [], thumbnail, category, categories, brand, subCategory, name, slug, metaTitle = "", metaDescription = "", ...rest } = payload;
+  const {
+    variants,
+    media = [],
+    thumbnail,
+    category,
+    categories,
+    brand,
+    subCategory,
+    name,
+    slug,
+    metaTitle = "",
+    metaDescription = "",
+    barcode = "",
+    benefits = [],
+    uses = [],
+    itemDetails = {},
+    ...rest
+  } = payload;
 
   if (!isValidObjectId(category)) throw new ApiError(400, "Invalid category id");
   const categoryDoc = await Category.findById(category);
@@ -82,7 +125,8 @@ export const createProduct = async (payload) => {
     ? await generateUniqueSlug(Product, slug)
     : await generateUniqueSlug(Product, name);
 
-  const aggregates = aggregateFromVariants(variants);
+  const normalizedVariants = variants.map(normalizeVariant);
+  const aggregates = aggregateFromVariants(normalizedVariants);
 
   // Normalize the multi-select list: always include the primary category and
   // deduplicate so MongoDB stores a clean array.
@@ -90,12 +134,27 @@ export const createProduct = async (payload) => {
     ? [...new Set([category, ...categories])]
     : [category];
 
+  // Auto-fill meta when the admin left it blank — saves them the SEO step
+  // for routine catalogue uploads while keeping the option to override.
+  const seoDefaults = deriveSeoDefaults({
+    name,
+    description: rest.description,
+    shortDescription: rest.shortDescription,
+    brandName: brandDoc?.name,
+  });
+  const finalMetaTitle = (metaTitle && metaTitle.trim()) || seoDefaults.metaTitle;
+  const finalMetaDescription = (metaDescription && metaDescription.trim()) || seoDefaults.metaDescription;
+
   const product = await Product.create({
     ...rest,
     name,
     slug: productSlug,
-    metaTitle,
-    metaDescription,
+    metaTitle: finalMetaTitle,
+    metaDescription: finalMetaDescription,
+    barcode,
+    benefits: Array.isArray(benefits) ? benefits.filter(Boolean) : [],
+    uses: Array.isArray(uses) ? uses.filter(Boolean) : [],
+    itemDetails: itemDetails || {},
     category,
     categories: categoriesList,
     subCategory: subCategory || undefined,
@@ -103,14 +162,14 @@ export const createProduct = async (payload) => {
     ...aggregates,
   });
 
-  const variantDocs = variants.map((v) => {
+  const variantDocs = normalizedVariants.map((v) => {
     const sku =
       v.sku?.trim() ||
       generateVariantSku({
         brandName: brandDoc?.name,
         categoryName: categoryDoc.name,
         productSlug,
-        attrs: [v.color, v.size].filter(Boolean),
+        attrs: [v.color, v.size, v.packSize].filter(Boolean),
       });
     return { ...v, sku, product: product._id };
   });
@@ -156,6 +215,10 @@ export const updateProduct = async (id, payload) => {
     slug,
     metaTitle,
     metaDescription,
+    barcode,
+    benefits,
+    uses,
+    itemDetails,
     ...rest
   } = payload;
 
@@ -203,13 +266,24 @@ export const updateProduct = async (id, payload) => {
 
   if (metaTitle !== undefined) product.metaTitle = metaTitle;
   if (metaDescription !== undefined) product.metaDescription = metaDescription;
+  if (barcode !== undefined) product.barcode = barcode;
+  if (Array.isArray(benefits)) product.benefits = benefits.filter(Boolean);
+  if (Array.isArray(uses)) product.uses = uses.filter(Boolean);
+  if (itemDetails !== undefined) {
+    // Replace as a whole so removing a key on the client clears it server-side.
+    product.itemDetails = itemDetails || {};
+  }
 
   Object.entries(rest).forEach(([key, value]) => {
     if (value !== undefined) product[key] = value;
   });
 
-  if (Array.isArray(variants) && variants.length) {
-    const aggregates = aggregateFromVariants(variants);
+  const normalizedVariants = Array.isArray(variants) && variants.length
+    ? variants.map(normalizeVariant)
+    : null;
+
+  if (normalizedVariants) {
+    const aggregates = aggregateFromVariants(normalizedVariants);
     product.minPrice = aggregates.minPrice;
     product.maxPrice = aggregates.maxPrice;
     product.totalStock = aggregates.totalStock;
@@ -218,18 +292,18 @@ export const updateProduct = async (id, payload) => {
 
   await product.save();
 
-  if (Array.isArray(variants) && variants.length) {
+  if (normalizedVariants) {
     const categoryDoc = await Category.findById(product.category);
     const brandDoc = product.brand ? await Brand.findById(product.brand) : null;
     await Variant.deleteMany({ product: product._id });
-    const variantDocs = variants.map((v) => {
+    const variantDocs = normalizedVariants.map((v) => {
       const sku =
         v.sku?.trim() ||
         generateVariantSku({
           brandName: brandDoc?.name,
           categoryName: categoryDoc?.name,
           productSlug: product.slug,
-          attrs: [v.color, v.size].filter(Boolean),
+          attrs: [v.color, v.size, v.packSize].filter(Boolean),
         });
       return { ...v, sku, product: product._id };
     });

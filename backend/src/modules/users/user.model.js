@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },
   password: { type: String, required: true, minlength: 8, select: false }, // select: false hides it from queries by default
   role: { type: String, enum: ['User', 'Staff', 'Super Admin'], default: 'User' },
+  // Modular permission keys (e.g. "products:write", "orders:update"). Only
+  // consulted for Staff users — Super Admin bypasses permission checks.
+  // See backend/src/modules/permissions/permissions.js for the canonical list.
+  permissions: { type: [String], default: [] },
   isVerified: {
     type: Boolean,
     default: false,

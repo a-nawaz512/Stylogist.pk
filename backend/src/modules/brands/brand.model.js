@@ -18,6 +18,20 @@ const brandSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    // SEO copy for the public /brand/:slug page. metaTitle/metaDescription
+    // also feed the sitemap and JSON-LD Brand schema.
+    metaTitle: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 60,
+    },
+    metaDescription: {
+      type: String,
+      trim: true,
+      default: "",
+      maxlength: 160,
+    },
     logo: {
       type: String,
       default: null,

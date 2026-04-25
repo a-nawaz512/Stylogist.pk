@@ -276,7 +276,7 @@ function SearchOverlay({ open, onClose }) {
     e.preventDefault();
     if (!debounced) return;
     onClose();
-    navigate(`/category?search=${encodeURIComponent(debounced)}`);
+    navigate(`/search?search=${encodeURIComponent(debounced)}`);
   };
 
   if (!open) return null;
@@ -300,7 +300,7 @@ function SearchOverlay({ open, onClose }) {
                   {results.map((p) => (
                     <li key={p._id}>
                       <button onClick={() => handleSelect(p.slug)} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 text-left">
-                        <img src={p.image} className="w-10 h-10 rounded object-cover" />
+                        <img src={p.image} alt={p.name} loading="lazy" decoding="async" className="w-10 h-10 rounded object-cover" />
                         <div className="flex-1 truncate text-sm font-medium">{p.name}</div>
                         <div className="text-sm font-bold text-[#007074]">{fmtPKR(p.minPrice)}</div>
                       </button>

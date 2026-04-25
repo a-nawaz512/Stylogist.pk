@@ -24,6 +24,7 @@ export const sendToken = (user, res) => {
     name: user.name,
     email: user.email,
     role: user.role,
+    permissions: user.permissions || [],
   };
 };
 
@@ -50,22 +51,48 @@ export const adminLoginService = async ({ email, password }) => {
 };
 
 // 🔹 Create new Staff/Admin service
-export const createAdminService = async ({ name, email, password, phone, role }) => {
+export const createAdminService = async ({ name, email, password, phone, role, permissions = [] }) => {
   const existing = await User.findOne({ email });
   if (existing) throw new ApiError(400, 'Email already in use');
 
-  console.log("create", password);
-
-
-  const hashedPassword = await bcrypt.hash(password, 12);
-
+  // Super Admins implicitly bypass permission checks; storing the array is
+  // harmless but we don't require it on the input.
   const newAdmin = await User.create({
     name,
     email,
     phone,
-    password: hashedPassword,
+    password,
     role,
+    permissions: role === 'Staff' ? permissions : [],
   });
 
   return newAdmin;
+};
+
+// 🔹 List all admin users (Staff + Super Admin) for the permissions screen.
+export const listStaffService = async () => {
+  const staff = await User.find({ role: { $in: ['Staff', 'Super Admin'] } })
+    .select('_id name email role permissions isBlocked createdAt')
+    .sort({ createdAt: -1 })
+    .lean();
+  return staff;
+};
+
+// 🔹 Replace a staff member's permission set. Super Admin's own permissions
+//    are immutable (they bypass the gate anyway), so we no-op for that role
+//    rather than silently rewriting the array.
+export const updateStaffPermissionsService = async (id, permissions) => {
+  const user = await User.findById(id).select('_id role permissions');
+  if (!user) throw new ApiError(404, 'Staff member not found');
+
+  if (user.role === 'Super Admin') {
+    throw new ApiError(400, "Super Admin permissions can't be edited — the role bypasses all checks.");
+  }
+  if (user.role !== 'Staff') {
+    throw new ApiError(400, 'Permissions can only be set on Staff users.');
+  }
+
+  user.permissions = [...new Set(permissions)];
+  await user.save();
+  return user.toObject();
 };

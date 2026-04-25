@@ -1,5 +1,15 @@
 import mongoose from "mongoose";
 
+const itemDetailsSchema = new mongoose.Schema(
+  {
+    itemForm: { type: String, trim: true, default: "" },
+    containerType: { type: String, trim: true, default: "" },
+    ageRange: { type: String, trim: true, default: "" },
+    dosageForm: { type: String, trim: true, default: "" },
+  },
+  { _id: false }
+);
+
 const productSchema = new mongoose.Schema(
   {
     name: {
@@ -34,6 +44,33 @@ const productSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+
+    // Global product identifier (ISBN / UPC / EAN / GTIN). Surfaced to Google
+    // via the `gtin` JSON-LD field for richer search results.
+    barcode: {
+      type: String,
+      trim: true,
+      default: "",
+      index: true,
+    },
+
+    // Bullet-style copy rendered as <ul> on the storefront under H2 sections.
+    benefits: {
+      type: [String],
+      default: [],
+    },
+
+    uses: {
+      type: [String],
+      default: [],
+    },
+
+    // Structured spec block. Embedded (rather than a separate collection)
+    // because it's always read with the product and never queried in isolation.
+    itemDetails: {
+      type: itemDetailsSchema,
+      default: () => ({}),
     },
 
     category: {

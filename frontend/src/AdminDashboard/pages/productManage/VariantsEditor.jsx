@@ -17,7 +17,8 @@ export default function VariantsEditor({ variants, addVariant, removeVariant, up
         </button>
       </div>
       <p className="text-xs text-slate-400 -mt-2">
-        Leave SKU blank to auto-generate one (e.g. <code className="text-slate-500">NIK-FAS-SILKSATI-BLK-M-A1B2</code>).
+        Use <strong>Pack size</strong> for capsule/bottle counts (e.g. <em>30 capsules</em>).
+        Leave SKU blank to auto-generate one.
       </p>
 
       <div className="space-y-3">
@@ -52,16 +53,33 @@ function VariantRow({ index, variant: v, onUpdate, onRemove }) {
         placeholder="SKU (auto if blank)"
         className={inputCls}
       />
-      <div className="grid grid-cols-3 gap-2">
-        {['size', 'color', 'material'].map((field) => (
-          <input
-            key={field}
-            value={v[field]}
-            onChange={(e) => onUpdate({ [field]: e.target.value })}
-            placeholder={field[0].toUpperCase() + field.slice(1)}
-            className={inputCls}
-          />
-        ))}
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={v.size}
+          onChange={(e) => onUpdate({ size: e.target.value })}
+          placeholder="Size (S / M / L)"
+          className={inputCls}
+        />
+        <input
+          value={v.packSize}
+          onChange={(e) => onUpdate({ packSize: e.target.value })}
+          placeholder="Pack size (30 capsules)"
+          className={inputCls}
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <input
+          value={v.color}
+          onChange={(e) => onUpdate({ color: e.target.value })}
+          placeholder="Color"
+          className={inputCls}
+        />
+        <input
+          value={v.ingredients}
+          onChange={(e) => onUpdate({ ingredients: e.target.value })}
+          placeholder="Ingredients"
+          className={inputCls}
+        />
       </div>
       <div className="grid grid-cols-3 gap-2">
         <input type="number" min="0" step="0.01" value={v.originalPrice}

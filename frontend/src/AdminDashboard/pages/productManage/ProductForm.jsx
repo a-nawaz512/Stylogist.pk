@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { FiLoader, FiPackage, FiRefreshCw } from 'react-icons/fi';
+import { FiBox, FiCheckCircle, FiHash, FiLoader, FiPackage, FiRefreshCw, FiTarget } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import ReactQuill from 'react-quill-new';
 import 'react-quill-new/dist/quill.snow.css';
@@ -14,9 +14,13 @@ import {
 } from './fields';
 import MediaUploader from './MediaUploader';
 import VariantsEditor from './VariantsEditor';
+import BulletListEditor from './BulletListEditor';
 import {
   FONT_WHITELIST,
+  PASTE_MATCHERS,
   QUILL_FORMATS,
+  SHORT_PASTE_MATCHERS,
+  SHORT_QUILL_FORMATS,
   inputCls,
   slugify,
   stripHtmlLen,
@@ -93,21 +97,33 @@ export default function ProductForm({
       ],
       handlers: { image: () => uploadQuillImage(descriptionRef) },
     },
+    clipboard: {
+      matchVisual: false,
+      matchers: PASTE_MATCHERS,
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [form.slug, form.name, form.metaTitle, form.metaDescription]);
 
   const shortModules = useMemo(() => ({
     toolbar: {
       container: [
-        ['bold', 'italic', 'underline'],
+        ['italic', 'underline'],
         [{ list: 'ordered' }, { list: 'bullet' }],
-        ['image'],
+        ['link'],
         ['clean'],
       ],
       handlers: { image: () => uploadQuillImage(shortRef) },
     },
+    clipboard: {
+      matchVisual: false,
+      matchers: SHORT_PASTE_MATCHERS,
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [form.slug, form.name, form.metaTitle, form.metaDescription]);
+
+  const itemDetails = form.itemDetails || {};
+  const setItemDetail = (key, val) =>
+    setForm((f) => ({ ...f, itemDetails: { ...(f.itemDetails || {}), [key]: val } }));
 
   return (
     <form onSubmit={onSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
@@ -150,15 +166,15 @@ export default function ProductForm({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <CountedField
             label="Meta title"
-            hint="For search engines"
+            hint="≤ 60 chars for Google snippets"
             value={form.metaTitle}
-            max={67}
+            max={60}
             onChange={(v) => setForm({ ...form, metaTitle: v })}
             placeholder="Silk Satin Slip Dress | Stylogist"
           />
           <CountedField
             label="Meta description"
-            hint="For search engines"
+            hint="≤ 160 chars for Google snippets"
             value={form.metaDescription}
             max={160}
             onChange={(v) => setForm({ ...form, metaDescription: v })}
@@ -167,8 +183,23 @@ export default function ProductForm({
         </div>
 
         <Field
+          label="Barcode (GTIN / UPC / ISBN)"
+          hint="Required for Google Shopping rich results — surfaces as `gtin13` in the JSON-LD Product schema."
+        >
+          <div className="relative">
+            <FiHash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+            <input
+              value={form.barcode || ''}
+              onChange={(e) => setForm({ ...form, barcode: e.target.value })}
+              placeholder="0123456789012"
+              className={`${inputCls} pl-9`}
+            />
+          </div>
+        </Field>
+
+        <Field
           label="Short description"
-          hint={`One-line blurb shown in listings · ${stripHtmlLen(form.shortDescription)} chars`}
+          hint={`One-line blurb shown in listings · ${stripHtmlLen(form.shortDescription)} chars · bold disabled by design`}
         >
           <div className="bg-white rounded-lg relative border border-slate-200 focus-within:ring-2 focus-within:ring-[#007074]/20 focus-within:border-[#007074] z-20">
             <ReactQuill
@@ -177,6 +208,7 @@ export default function ProductForm({
               value={form.shortDescription}
               onChange={(value) => setForm({ ...form, shortDescription: value })}
               modules={shortModules}
+              formats={SHORT_QUILL_FORMATS}
               placeholder="Featherlight silk in a minimal silhouette..."
               className="short-quill"
             />
@@ -199,6 +231,68 @@ export default function ProductForm({
               placeholder="Write a detailed product description..."
               className="quill-editor"
             />
+          </div>
+        </Field>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Field
+            label="Benefits"
+            hint="Rendered as <ul> under an H2 heading on the product page."
+          >
+            <BulletListEditor
+              value={form.benefits}
+              onChange={(next) => setForm({ ...form, benefits: next })}
+              placeholder="Strengthens nails and hair"
+              addLabel="Add benefit"
+            />
+          </Field>
+          <Field
+            label="Uses"
+            hint="Rendered as <ul> under an H2 heading on the product page."
+          >
+            <BulletListEditor
+              value={form.uses}
+              onChange={(next) => setForm({ ...form, uses: next })}
+              placeholder="Take 1 capsule daily after meals"
+              addLabel="Add use case"
+            />
+          </Field>
+        </div>
+
+        <Field label="Item details" hint="Structured spec block — surfaces as a table on the product page.">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <SmallField icon={<FiBox size={12} />} label="Item form">
+              <input
+                value={itemDetails.itemForm || ''}
+                onChange={(e) => setItemDetail('itemForm', e.target.value)}
+                placeholder="Capsule"
+                className={inputCls}
+              />
+            </SmallField>
+            <SmallField icon={<FiPackage size={12} />} label="Container type">
+              <input
+                value={itemDetails.containerType || ''}
+                onChange={(e) => setItemDetail('containerType', e.target.value)}
+                placeholder="Bottle"
+                className={inputCls}
+              />
+            </SmallField>
+            <SmallField icon={<FiTarget size={12} />} label="Age range">
+              <input
+                value={itemDetails.ageRange || ''}
+                onChange={(e) => setItemDetail('ageRange', e.target.value)}
+                placeholder="Adult"
+                className={inputCls}
+              />
+            </SmallField>
+            <SmallField icon={<FiCheckCircle size={12} />} label="Dosage form">
+              <input
+                value={itemDetails.dosageForm || ''}
+                onChange={(e) => setItemDetail('dosageForm', e.target.value)}
+                placeholder="Capsule"
+                className={inputCls}
+              />
+            </SmallField>
           </div>
         </Field>
 
@@ -304,6 +398,18 @@ export default function ProductForm({
   );
 }
 
+function SmallField({ icon, label, children }) {
+  return (
+    <label className="block">
+      <span className="text-[11px] font-medium text-slate-600 mb-1 inline-flex items-center gap-1">
+        <span className="text-[#007074]">{icon}</span>
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
 // Segmented flag toggle: click-to-activate, shows an accent border + check
 // dot when active. Used for the Featured / Trending / Deal merchandising
 // rails so admins can tag a product into a home section in one click.
@@ -332,4 +438,3 @@ function MerchFlag({ label, hint, checked, onChange }) {
     </button>
   );
 }
-

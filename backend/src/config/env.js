@@ -14,6 +14,10 @@ const env = {
   emailPort: process.env.EMAIL_PORT ? Number(process.env.EMAIL_PORT) : 465, // default SSL port
   emailUser: process.env.EMAIL_USER,
   emailPass: process.env.EMAIL_PASS,
+
+  // Public URL of the storefront, used by the sitemap generator and the
+  // robots.txt response. Falls back to a sensible default for dev.
+  siteUrl: (process.env.SITE_URL || 'https://stylogist.pk').replace(/\/$/, ''),
 };
 
 // Fail-fast validation

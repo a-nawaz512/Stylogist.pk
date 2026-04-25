@@ -420,7 +420,7 @@ export default function CheckoutPage() {
                     <li key={`${it.productId}-${it.sku}`} className="flex gap-3">
                       <div className="w-14 h-14 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
                         {it.image ? (
-                          <img src={it.image} alt={it.name} className="w-full h-full object-cover" />
+                          <img src={it.image} alt={it.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-300">
                             <FiPackage size={18} />

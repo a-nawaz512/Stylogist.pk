@@ -12,6 +12,13 @@ const orderItemSchema = new mongoose.Schema(
     quantity: { type: Number, required: true },
     subtotal: { type: Number, required: true },
     sku: { type: String, required: true }, // track variant SKU
+
+    // Per-item shipping flags. `shipped` lets the admin mark some items as
+    // shipped while the rest remain pending — the order-level `status`
+    // becomes "shipped" only when ALL items are shipped, otherwise it
+    // settles into a derived "partially_shipped" state at the API layer.
+    shipped: { type: Boolean, default: false },
+    shippedAt: { type: Date, default: null },
   },
   { _id: false }
 );
@@ -105,6 +112,7 @@ const orderSchema = new mongoose.Schema(
         "pending",
         "confirmed",
         "shipped",
+        "partially_shipped",
         "delivered",
         "cancelled",
         "returned",
