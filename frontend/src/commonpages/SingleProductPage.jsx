@@ -86,6 +86,29 @@ export default function ProductDetailsPage() {
     const barcode = (product.barcode || '').replace(/\D/g, '');
     const gtinKey = barcode.length === 12 ? 'gtin12' : null;
 
+    // Shipping + return policy stubs — emitted on every Offer so Google
+    // Merchant listings validates without "Missing shippingDetails" /
+    // "Missing hasMerchantReturnPolicy" warnings. Defaults reflect the
+    // store's COD-only Pakistan shipping & 7-day return policy.
+    const shippingDetails = {
+      '@type': 'OfferShippingDetails',
+      shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'PKR' },
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'PK' },
+      deliveryTime: {
+        '@type': 'ShippingDeliveryTime',
+        handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+        transitTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 5, unitCode: 'DAY' },
+      },
+    };
+    const merchantReturnPolicy = {
+      '@type': 'MerchantReturnPolicy',
+      applicableCountry: 'PK',
+      returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+      merchantReturnDays: 7,
+      returnMethod: 'https://schema.org/ReturnByMail',
+      returnFees: 'https://schema.org/FreeReturn',
+    };
+
     const offers = variants.length
       ? variants.map((v) => ({
         '@type': 'Offer',
@@ -98,6 +121,8 @@ export default function ProductDetailsPage() {
             : 'https://schema.org/OutOfStock',
         itemCondition: 'https://schema.org/NewCondition',
         url: canonicalUrl,
+        shippingDetails,
+        hasMerchantReturnPolicy: merchantReturnPolicy,
       }))
       : undefined;
 
@@ -128,6 +153,8 @@ export default function ProductDetailsPage() {
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
         url: canonicalUrl,
+        shippingDetails,
+        hasMerchantReturnPolicy: merchantReturnPolicy,
       },
     };
 
@@ -270,23 +297,29 @@ export default function ProductDetailsPage() {
   // schema, instead of bailing with "Product not found". The full schema
   // overrides this once the product data lands.
   if (isLoading) {
+    const placeholderName = (slug || '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     return (
       <>
         <Seo
-          title={`Loading product · Stylogist`}
-          description="Loading product details…"
+          title={`${placeholderName} · Stylogist`}
+          description={`Shop ${placeholderName} on Stylogist.pk — free shipping & cash on delivery in Pakistan.`}
           type="product"
-          canonical={typeof window !== 'undefined' ? `${window.location.origin}/product/${slug}` : undefined}
+          image={origin ? `${origin}/logo.png` : undefined}
+          canonical={origin ? `${origin}/product/${slug}` : undefined}
           jsonLd={{
             '@context': 'https://schema.org',
             '@type': 'Product',
-            name: (slug || '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-            url: typeof window !== 'undefined' ? `${window.location.origin}/product/${slug}` : undefined,
-            offers: {
-              '@type': 'Offer',
-              priceCurrency: 'PKR',
-              availability: 'https://schema.org/InStock',
-            },
+            name: placeholderName,
+            description: `Shop ${placeholderName} on Stylogist.pk — free shipping & cash on delivery in Pakistan.`,
+            // `image` is required by Google's Product / Merchant listings
+            // rich result. Always populate with the brand logo as a fallback
+            // so the validator doesn't flag a missing field.
+            image: origin ? [`${origin}/logo.png`] : undefined,
+            brand: { '@type': 'Brand', name: 'Stylogist' },
+            url: origin ? `${origin}/product/${slug}` : undefined,
+            // Offer is intentionally omitted while loading — emitting a
+            // placeholder `price: 0` would invalidate Merchant listings.
           }}
           jsonLdId="product-loading"
         />
