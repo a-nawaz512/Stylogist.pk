@@ -246,20 +246,33 @@ export default function useProductManage() {
     if (!plainDesc || plainDesc.length < 5) return toast.error('Description must be at least 5 characters');
     if (!form.category && !(form.categories?.length)) return toast.error('Select at least one category');
 
-    const variants = form.variants.map((v) => ({
-      sku: (v.sku || '').trim() || undefined,
-      size: (v.size || '').trim() || undefined,
-      packSize: (v.packSize || '').trim() || undefined,
-      color: (v.color || '').trim() || undefined,
-      ingredients: (v.ingredients || '').trim() || undefined,
-      originalPrice: Number(v.originalPrice),
-      salePrice: Number(v.salePrice),
-      stock: Number(v.stock),
-    }));
+    // UPC is optional, but when supplied it must be exactly 12 digits — the
+    // backend validator rejects anything else with a 400.
+    const upc = (form.barcode || '').trim();
+    if (upc && !/^\d{12}$/.test(upc)) {
+      return toast.error('UPC must be exactly 12 digits');
+    }
+
+    const variants = form.variants.map((v) => {
+      // Stock falls back to 50 when blank or invalid — matches backend default.
+      const stockRaw = String(v.stock ?? '').trim();
+      const stockNumber = Number(stockRaw);
+      const stock = stockRaw === '' || !Number.isFinite(stockNumber) || stockNumber < 0 ? 50 : stockNumber;
+      return {
+        sku: (v.sku || '').trim() || undefined,
+        size: (v.size || '').trim() || undefined,
+        packSize: (v.packSize || '').trim() || undefined,
+        color: (v.color || '').trim() || undefined,
+        ingredients: (v.ingredients || '').trim() || undefined,
+        originalPrice: Number(v.originalPrice),
+        salePrice: Number(v.salePrice),
+        stock,
+      };
+    });
 
     for (const [i, v] of variants.entries()) {
-      if (Number.isNaN(v.originalPrice) || Number.isNaN(v.salePrice) || Number.isNaN(v.stock)) {
-        return toast.error(`Variant ${i + 1}: numeric fields required`);
+      if (Number.isNaN(v.originalPrice) || Number.isNaN(v.salePrice)) {
+        return toast.error(`Variant ${i + 1}: original price and sale price are required`);
       }
     }
 

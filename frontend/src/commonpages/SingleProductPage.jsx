@@ -81,15 +81,10 @@ export default function ProductDetailsPage() {
     const canonicalUrl = typeof window !== 'undefined' ? window.location.href : undefined;
     const anyInStock = variants.some((v) => (v.stock ?? 0) > 0);
 
-    // Pick the right Schema.org GTIN property based on length so Google
-    // accepts the barcode for rich Shopping results.
+    // UPC-only catalogue: `barcode` is enforced to 12 digits at the form
+    // and validator level, so we always emit it as `gtin12`.
     const barcode = (product.barcode || '').replace(/\D/g, '');
-    const gtinKey =
-      barcode.length === 8 ? 'gtin8'
-        : barcode.length === 12 ? 'gtin12'
-          : barcode.length === 13 ? 'gtin13'
-            : barcode.length === 14 ? 'gtin14'
-              : barcode ? 'gtin' : null;
+    const gtinKey = barcode.length === 12 ? 'gtin12' : null;
 
     const offers = variants.length
       ? variants.map((v) => ({
@@ -178,7 +173,7 @@ export default function ProductDetailsPage() {
     };
   }, [product]);
 
-  const lowStock = !outOfStock && stock <= 5;
+  // Stock counts are intentionally hidden on the PDP, so no `lowStock` here.
 
   const price = matchedVariant?.salePrice ?? product?.minPrice ?? 0;
   const originalPrice =
@@ -357,7 +352,7 @@ export default function ProductDetailsPage() {
                       : 'border-gray-100 hover:border-[#007074]/40'
                       }`}
                   >
-                    <div className="w-full h-full bg-[#F7F3F0] rounded-lg overflow-hidden">
+                    <div className="w-full h-full bg-[#F7F3F0] rounded-lg overflow-hidden flex items-center justify-center">
                       <img
                         src={src}
                         alt={`${product.name} thumbnail ${idx + 1}`}
@@ -365,7 +360,7 @@ export default function ProductDetailsPage() {
                         height="64"
                         loading="lazy"
                         decoding="async"
-                        className="pdp-crisp w-full h-full object-cover"
+                        className="pdp-crisp max-w-full max-h-full w-auto h-auto object-contain"
                       />
                     </div>
                   </button>
@@ -524,13 +519,17 @@ export default function ProductDetailsPage() {
             </div>
           )}
 
-          {/* Quantity + stock status */}
+          {/* Quantity. Stock counts intentionally hidden — out-of-stock is
+              still surfaced because it gates the buy button, but exact
+              numbers / "Only N left" urgency baits are kept off-page. */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black uppercase tracking-[0.25em] text-gray-500">Quantity</span>
-              <span className={`text-[10px] font-black uppercase tracking-[0.2em] ${outOfStock ? 'text-red-500' : 'text-[#007074]'}`}>
-                {outOfStock ? 'Out of stock' : lowStock ? `Only ${stock} left` : 'In stock'}
-              </span>
+              {outOfStock && (
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-red-500">
+                  Out of stock
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <div className="inline-flex items-center border border-gray-200 rounded-full bg-white">
@@ -550,19 +549,6 @@ export default function ProductDetailsPage() {
                   <FiPlus size={14} />
                 </button>
               </div>
-              {lowStock && (
-                <div className="flex-1 min-w-0">
-                  <div className="h-1.5 bg-[#F7F3F0] rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-[#007074] to-[#0a8c91] transition-all"
-                      style={{ width: `${Math.max(10, (stock / 10) * 100)}%` }}
-                    />
-                  </div>
-                  <p className="text-[10px] text-gray-500 mt-1 font-semibold">
-                    Selling fast · grab yours before it's gone
-                  </p>
-                </div>
-              )}
             </div>
           </div>
 
@@ -747,7 +733,7 @@ export default function ProductDetailsPage() {
                     <ItemDetailRow label="Dosage form" value={product.itemDetails.dosageForm} />
                   )}
                   {product.barcode && (
-                    <ItemDetailRow label="Barcode (GTIN)" value={product.barcode} />
+                    <ItemDetailRow label="UPC" value={product.barcode} />
                   )}
                 </tbody>
               </table>
@@ -755,31 +741,36 @@ export default function ProductDetailsPage() {
           </ScrollReveal>
         )}
 
-        {/* KEY HIGHLIGHTS */}
-        <ScrollReveal as="section">
-          <h2 className="text-xl font-bold text-[#222] mb-4">Key Highlights</h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-700">
-            {product.brand?.name && <li>✔ Brand: {product.brand.name}</li>}
-            {variantIngredients(matchedVariant) && (
-              <li>✔ Ingredients: {variantIngredients(matchedVariant)}</li>
-            )}
-            {matchedVariant?.weight && <li>✔ Weight: {matchedVariant.weight}g</li>}
-            <li>✔ Total Stock: {product.totalStock ?? 0}</li>
-            <li>✔ Variants: {variants.length}</li>
-            {product.averageRating && <li>✔ Rating: {product.averageRating.toFixed(1)} / 5</li>}
-          </ul>
-        </ScrollReveal>
-
-        {/* SPECIFICATIONS */}
+        {/* SPECIFICATIONS — merged with the previous "Key Highlights" block.
+            Stock is intentionally omitted: showing it on a public PDP can
+            backfire (urgency-baited shoppers, scraping competitors). */}
         <ScrollReveal as="section">
           <h2 className="text-xl font-bold text-[#222] mb-4">Specifications</h2>
           <ul className="divide-y divide-gray-100 text-sm">
             <SpecRow label="Brand" value={product.brand?.name || '—'} />
+            {product.category?.name && (
+              <SpecRow label="Category" value={product.category.name} />
+            )}
             {variantIngredients(matchedVariant) && (
               <SpecRow label="Ingredients" value={variantIngredients(matchedVariant)} />
             )}
             {matchedVariant?.weight && (
               <SpecRow label="Weight" value={`${matchedVariant.weight}g`} />
+            )}
+            {product.itemDetails?.itemForm && (
+              <SpecRow label="Item form" value={product.itemDetails.itemForm} />
+            )}
+            {product.itemDetails?.dosageForm && (
+              <SpecRow label="Dosage form" value={product.itemDetails.dosageForm} />
+            )}
+            {product.barcode && (
+              <SpecRow label="UPC" value={product.barcode} />
+            )}
+            {product.averageRating > 0 && (
+              <SpecRow
+                label="Rating"
+                value={`${product.averageRating.toFixed(1)} / 5 (${product.totalReviews || 0} reviews)`}
+              />
             )}
             <SpecRow label="Variants" value={variants.length} />
             <SpecRow
@@ -807,7 +798,6 @@ export default function ProductDetailsPage() {
                     <th className="text-left px-4 py-3">Color</th>
                     <th className="text-left px-4 py-3">Ingredients</th>
                     <th className="text-right px-4 py-3">Price</th>
-                    <th className="text-right px-4 py-3">Stock</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -820,9 +810,6 @@ export default function ProductDetailsPage() {
                       <td className="px-4 py-3 text-xs text-gray-500">{variantIngredients(v) || '—'}</td>
                       <td className="px-4 py-3 text-right font-semibold">
                         {fmtPKR(v.salePrice)}
-                      </td>
-                      <td className={`px-4 py-3 text-right ${v.stock === 0 ? 'text-red-500' : ''}`}>
-                        {v.stock ?? 0}
                       </td>
                     </tr>
                   ))}
@@ -1000,12 +987,16 @@ const ZoomableImage = memo(function ZoomableImage({ src, alt }) {
   }
 
   return (
-    <div className="group aspect-[4/5] bg-white border border-gray-100 rounded-[2rem] p-2 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5">
+    <div className="group aspect-[4/5] bg-[#005A5D] border border-gray-100 rounded-[2rem] p-2 shadow-sm transition-all duration-500 hover:shadow-xl hover:-translate-y-0.5">
       <div
-        className="relative w-full h-full bg-[#F7F3F0] rounded-[1.5rem] overflow-hidden cursor-zoom-in select-none"
+        className="relative w-full h-full bg-[white] rounded-[1.5rem] overflow-hidden cursor-zoom-in select-none flex items-center justify-center"
         onPointerMove={handleMove}
         onPointerLeave={handleLeave}
       >
+        {/* `object-contain` + max-w/max-h ensures the image is shown in full
+            on every screen size (no cropping, aspect ratio preserved). The
+            flex-center on the parent letterboxes the image when its aspect
+            differs from the 4:5 container. */}
         <img
           src={src}
           alt={alt}
@@ -1015,14 +1006,18 @@ const ZoomableImage = memo(function ZoomableImage({ src, alt }) {
           loading="eager"
           fetchpriority="high"
           decoding="async"
-          className={`pdp-crisp w-full h-full object-cover transition-[opacity,transform] duration-500 group-hover:scale-[1.03] ${zoom ? 'opacity-0' : 'opacity-100'}`}
+          className={`pdp-crisp max-w-full max-h-full w-auto h-auto object-contain transition-[opacity,transform] duration-500 group-hover:scale-[1.03] ${zoom ? 'opacity-0' : 'opacity-100'}`}
         />
         {zoom && (
+          // Zoom magnifier — backgroundSize: 'contain' mirrors the default
+          // object-contain layout, then 200% scales it 2× while keeping the
+          // aspect ratio. The position calc translates the cursor's
+          // percentage coords into the magnified view's anchor.
           <div
-            className="absolute inset-0 bg-no-repeat"
+            className="absolute inset-0 bg-no-repeat bg-center"
             style={{
               backgroundImage: `url(${src})`,
-              backgroundSize: '200%',
+              backgroundSize: '200% auto',
               backgroundPosition: `${zoom.x}% ${zoom.y}%`,
               imageRendering: 'auto',
             }}

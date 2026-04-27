@@ -11,6 +11,16 @@ export const updateReviewStatus = async (req, res) => {
   res.status(200).json({ status: "success", message: "Review updated", data: review });
 };
 
+export const adminCreateReview = async (req, res) => {
+  const review = await ReviewService.adminCreateReview(req.user.id, req.validated.body);
+  res.status(201).json({ status: "success", message: "Review created", data: review });
+};
+
+export const adminUpdateReview = async (req, res) => {
+  const review = await ReviewService.adminUpdateReview(req.params.id, req.validated.body);
+  res.status(200).json({ status: "success", message: "Review updated", data: review });
+};
+
 export const deleteReview = async (req, res) => {
   await ReviewService.deleteReview(req.params.id);
   res.status(200).json({ status: "success", message: "Review deleted" });

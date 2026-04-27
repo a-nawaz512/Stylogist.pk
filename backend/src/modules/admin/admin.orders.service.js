@@ -29,21 +29,47 @@ export const listOrders = async (query = {}) => {
     if (to) filter.createdAt.$lte = new Date(to);
   }
 
-  // Search: by order id (hex tail), or by matching user name/email.
+  // Search: matches against customer name/email/phone AND the order id —
+  // both the full 24-char ObjectId (if pasted) and the visible 6-char tail
+  // shown in the UI (#A1B2C3). `_id` is an ObjectId, so we have to stringify
+  // it via $expr + $toString to run a regex against it.
   if (search) {
-    const rx = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-    const userIds = await User.find({ $or: [{ name: rx }, { email: rx }, { phone: rx }] }).distinct("_id");
-    const or = [{ user: { $in: userIds } }];
-    if (/^[0-9a-fA-F]{6,24}$/.test(search)) {
-      const orderMatches = await Order.find({
-        _id: { $regex: new RegExp(search + "$", "i") },
-      })
-        .select("_id")
-        .lean()
-        .catch(() => []);
-      if (orderMatches.length) or.push({ _id: { $in: orderMatches.map((o) => o._id) } });
+    const trimmed = search.trim();
+    const escaped = trimmed.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const rx = new RegExp(escaped, "i");
+    const or = [];
+
+    // Customer matches
+    const userIds = await User.find({
+      $or: [{ name: rx }, { email: rx }, { phone: rx }],
+    }).distinct("_id");
+    if (userIds.length) or.push({ user: { $in: userIds } });
+
+    // Order id matches — supports full id or any hex substring (tail / prefix).
+    if (/^[0-9a-fA-F]+$/.test(trimmed)) {
+      // Full 24-char ObjectId — direct equality is cheaper than $expr.
+      if (/^[0-9a-fA-F]{24}$/.test(trimmed)) {
+        or.push({ _id: trimmed });
+      }
+      // Hex substring (e.g. last 6 of #A1B2C3) — match against the
+      // string form of _id. Anchored to end of id so trailing-tail searches
+      // are stable; falls back to anywhere-in-id otherwise.
+      if (trimmed.length >= 4) {
+        or.push({
+          $expr: {
+            $regexMatch: {
+              input: { $toString: "$_id" },
+              regex: escaped,
+              options: "i",
+            },
+          },
+        });
+      }
     }
-    filter.$or = or;
+
+    // No matchable predicate (e.g. empty search after trimming) — leave the
+    // filter unconstrained instead of returning zero rows for everything.
+    if (or.length) filter.$or = or;
   }
 
   const pageNum = Math.max(Number(page), 1);

@@ -14,7 +14,9 @@ const variantSchema = z.object({
   originalPrice: z.number().nonnegative("Original price cannot be negative"),
   salePrice: z.number().nonnegative("Sale price cannot be negative"),
   discountPercentage: z.number().min(0).max(100).optional(),
-  stock: z.number().int().nonnegative("Stock cannot be negative"),
+  // Stock is optional at the API edge: the service layer defaults missing or
+  // blank values to 50 so admins don't have to fill it for routine uploads.
+  stock: z.number().int().nonnegative("Stock cannot be negative").optional(),
   weight: z.number().nonnegative().optional(),
   isActive: z.boolean().optional(),
 });
@@ -46,7 +48,12 @@ export const createProductSchema = z.object({
     shortDescription: z.string().trim().optional(),
     metaTitle: z.string().trim().max(60, "Meta title must be 60 characters or fewer").optional(),
     metaDescription: z.string().trim().max(160, "Meta description must be 160 characters or fewer").optional(),
-    barcode: z.string().trim().max(64).optional(),
+    barcode: z
+      .string()
+      .trim()
+      .regex(/^\d{12}$/, "UPC must be exactly 12 digits")
+      .optional()
+      .or(z.literal("")),
     benefits: z.array(z.string().trim().min(1)).optional(),
     uses: z.array(z.string().trim().min(1)).optional(),
     itemDetails: itemDetailsSchema,
@@ -77,7 +84,12 @@ export const updateProductSchema = z.object({
     shortDescription: z.string().trim().optional(),
     metaTitle: z.string().trim().max(60).optional(),
     metaDescription: z.string().trim().max(160).optional(),
-    barcode: z.string().trim().max(64).optional(),
+    barcode: z
+      .string()
+      .trim()
+      .regex(/^\d{12}$/, "UPC must be exactly 12 digits")
+      .optional()
+      .or(z.literal("")),
     benefits: z.array(z.string().trim().min(1)).optional(),
     uses: z.array(z.string().trim().min(1)).optional(),
     itemDetails: itemDetailsSchema,

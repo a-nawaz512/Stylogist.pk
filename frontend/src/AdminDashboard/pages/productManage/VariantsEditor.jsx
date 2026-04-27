@@ -87,7 +87,7 @@ function VariantRow({ index, variant: v, onUpdate, onRemove }) {
         <input type="number" min="0" step="0.01" value={v.salePrice}
           onChange={(e) => onUpdate({ salePrice: e.target.value })} placeholder="Sale" className={inputCls} />
         <input type="number" min="0" step="1" value={v.stock}
-          onChange={(e) => onUpdate({ stock: e.target.value })} placeholder="Stock" className={inputCls} />
+          onChange={(e) => onUpdate({ stock: e.target.value })} placeholder="Stock (50)" title="Defaults to 50 when blank" className={inputCls} />
       </div>
     </div>
   );

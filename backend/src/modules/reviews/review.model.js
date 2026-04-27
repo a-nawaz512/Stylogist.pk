@@ -30,6 +30,13 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    // Override author name. Optional. Used when the admin authors a review
+    // on behalf of a customer or seeds the catalogue with social proof.
+    displayName: {
+      type: String,
+      trim: true,
+      default: "",
+    },
     status: {
       type: String,
       enum: ["pending", "approved", "flagged"],

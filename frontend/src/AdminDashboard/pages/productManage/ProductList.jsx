@@ -1,5 +1,6 @@
 import React from 'react';
-import { FiSearch, FiEdit2, FiTrash2, FiPackage } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import { FiSearch, FiEdit2, FiTrash2, FiPackage, FiEye } from 'react-icons/fi';
 
 export default function ProductList({
   products,
@@ -127,6 +128,17 @@ function ProductRow({ product: p, onEdit, onDelete }) {
       </td>
       <td className="px-4 py-3 text-right">
         <div className="inline-flex items-center gap-1">
+          {/* Opens the public storefront PDP in a new tab so the admin can
+              QA pricing, copy and SEO without losing their place in the list. */}
+          <Link
+            to={`/product/${p.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-8 h-8 rounded-md inline-flex items-center justify-center text-slate-400 hover:text-[#007074] hover:bg-teal-50"
+            title="View product page"
+          >
+            <FiEye size={14} />
+          </Link>
           <button
             onClick={() => onEdit(p)}
             className="w-8 h-8 rounded-md inline-flex items-center justify-center text-slate-400 hover:text-[#007074] hover:bg-[#007074]/10"

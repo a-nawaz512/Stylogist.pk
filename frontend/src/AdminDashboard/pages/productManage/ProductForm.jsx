@@ -183,17 +183,34 @@ export default function ProductForm({
         </div>
 
         <Field
-          label="Barcode (GTIN / UPC / ISBN)"
-          hint="Required for Google Shopping rich results — surfaces as `gtin13` in the JSON-LD Product schema."
+          label="UPC"
+          hint="Universal Product Code — exactly 12 digits. Surfaces as `gtin12` in the JSON-LD Product schema for Google Shopping rich results."
         >
           <div className="relative">
             <FiHash className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
             <input
               value={form.barcode || ''}
-              onChange={(e) => setForm({ ...form, barcode: e.target.value })}
-              placeholder="0123456789012"
-              className={`${inputCls} pl-9`}
+              onChange={(e) => {
+                // Strip non-digits as the user types and cap at 12 chars so
+                // invalid input never reaches the form state.
+                const next = (e.target.value || '').replace(/\D/g, '').slice(0, 12);
+                setForm({ ...form, barcode: next });
+              }}
+              placeholder="012345678905"
+              maxLength={12}
+              inputMode="numeric"
+              pattern="\d{12}"
+              className={`${inputCls} pl-9 ${
+                form.barcode && form.barcode.length !== 12
+                  ? 'border-red-300 focus:border-red-500 focus:ring-red-500/20'
+                  : ''
+              }`}
             />
+            {form.barcode && form.barcode.length > 0 && form.barcode.length !== 12 && (
+              <p className="text-[11px] text-red-500 mt-1">
+                UPC must be exactly 12 digits ({form.barcode.length}/12).
+              </p>
+            )}
           </div>
         </Field>
 

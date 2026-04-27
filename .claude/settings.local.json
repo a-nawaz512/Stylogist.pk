@@ -11,7 +11,12 @@
       "Bash(node --check src/modules/admin/admin.routes.js)",
       "Bash(node --check src/modules/admin/admin.controller.js)",
       "Bash(node --check src/modules/admin/admin.services.js)",
-      "Bash(node --check src/modules/admin/admin.orders.service.js)"
+      "Bash(node --check src/modules/admin/admin.orders.service.js)",
+      "Bash(node --check src/modules/reviews/review.routes.js)",
+      "Bash(node --check src/modules/reviews/review.controller.js)",
+      "Bash(node --check src/modules/reviews/review.service.js)",
+      "Bash(node --check src/modules/reviews/review.validation.js)",
+      "Bash(node --check src/modules/reviews/review.model.js)"
     ]
   }
 }

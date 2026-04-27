@@ -66,7 +66,7 @@ export default function OrderLogs() {
           <input
             value={search}
             onChange={(e) => { setSearch(e.target.value); setPage(1); }}
-            placeholder="Search by customer name, email, phone, or order id"
+            placeholder="Search by order id (e.g. A1B2C3 or full id), customer name, email, or phone"
             className="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
           />
         </div>
@@ -265,12 +265,20 @@ function OrderDetailModal({ order, onClose }) {
     if (newStatus === order.status) return;
 
     // Shipping transitions open a per-item picker so the admin can dispatch
-    // partial shipments. Default selection: items not already shipped.
+    // partial shipments. Default selection: items not already shipped, and
+    // we seed the shipment-specific tracking fields with whatever's already
+    // on the order so the admin only edits what's different for this batch.
     if (SHIPMENT_STATUSES.has(newStatus)) {
       const defaultIndexes = (order.items || [])
         .map((it, idx) => (it.shipped ? null : idx))
         .filter((v) => v !== null);
-      setShipmentDraft({ status: newStatus, indexes: defaultIndexes });
+      setShipmentDraft({
+        status: newStatus,
+        indexes: defaultIndexes,
+        trackingCompany: order.trackingCompany || '',
+        trackingId: order.trackingId || '',
+        trackingLink: order.trackingLink || '',
+      });
       return;
     }
 
@@ -293,14 +301,22 @@ function OrderDetailModal({ order, onClose }) {
     if (!shipmentDraft.indexes.length) return;
     setPendingStatus(shipmentDraft.status);
     try {
+      // Pass the shipment-scoped tracking fields straight through. They
+      // overwrite the order's tracking record so the customer email shows
+      // the courier responsible for *this* batch, even on later shipments.
       await updateMut.mutateAsync({
         id: order._id,
         status: shipmentDraft.status,
-        trackingCompany: trackingCompany.trim(),
-        trackingLink: trackingLink.trim(),
-        trackingId: trackingId.trim(),
+        trackingCompany: (shipmentDraft.trackingCompany || '').trim(),
+        trackingLink: (shipmentDraft.trackingLink || '').trim(),
+        trackingId: (shipmentDraft.trackingId || '').trim(),
         shippedItemIndexes: shipmentDraft.indexes,
       });
+      // Mirror the freshly-saved tracking back into the parent panel so the
+      // admin sees a consistent state even if they don't immediately reopen.
+      setTrackingCompany((shipmentDraft.trackingCompany || '').trim());
+      setTrackingLink((shipmentDraft.trackingLink || '').trim());
+      setTrackingId((shipmentDraft.trackingId || '').trim());
       setShipmentDraft(null);
       onClose();
     } catch { /* hook toast */ }
@@ -395,7 +411,7 @@ function OrderDetailModal({ order, onClose }) {
           </Panel>
 
           {/* New Tracking Panel */}
-          <Panel title="Tracking Information" icon={<FiLink size={14} />}>
+          {/* <Panel title="Tracking Information" icon={<FiLink size={14} />}>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
               <div>
                 <label className="block text-[11px] font-medium text-slate-500 uppercase mb-1">Courier Company</label>
@@ -438,7 +454,7 @@ function OrderDetailModal({ order, onClose }) {
                 Save Tracking
               </button>
             </div>
-          </Panel>
+          </Panel> */}
 
           <Panel title="Update status" icon={<FiTruck size={14} />}>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
@@ -488,6 +504,9 @@ function ShipmentPickerModal({ order, draft, onChange, onCancel, onConfirm, subm
   const selected = new Set(draft.indexes);
   const totalSelectable = items.filter((it) => !it.shipped).length;
   const willShipAll = selected.size === totalSelectable && totalSelectable > 0;
+  const isFollowupShipment = items.some((it) => it.shipped);
+
+  const update = (patch) => onChange({ ...draft, ...patch });
 
   const toggle = (idx) => {
     const next = new Set(selected);
@@ -495,17 +514,17 @@ function ShipmentPickerModal({ order, draft, onChange, onCancel, onConfirm, subm
     else next.add(idx);
     // Keep status in sync — selecting every remaining item promotes to "shipped".
     const promoted = next.size === totalSelectable ? 'shipped' : 'partially_shipped';
-    onChange({ status: promoted, indexes: [...next].sort((a, b) => a - b) });
+    update({ status: promoted, indexes: [...next].sort((a, b) => a - b) });
   };
 
   const toggleAll = () => {
     if (willShipAll) {
-      onChange({ status: 'partially_shipped', indexes: [] });
+      update({ status: 'partially_shipped', indexes: [] });
     } else {
       const allIdx = items
         .map((it, idx) => (it.shipped ? null : idx))
         .filter((v) => v !== null);
-      onChange({ status: 'shipped', indexes: allIdx });
+      update({ status: 'shipped', indexes: allIdx });
     }
   };
 
@@ -530,6 +549,58 @@ function ShipmentPickerModal({ order, draft, onChange, onCancel, onConfirm, subm
             <FiX size={16} />
           </button>
         </header>
+
+        <div className="px-5 py-4 border-b border-slate-100 bg-slate-50/40 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-slate-600 inline-flex items-center gap-1.5">
+              <FiLink size={11} />
+              {isFollowupShipment ? 'Tracking for this shipment' : 'Tracking information'}
+            </h4>
+            {isFollowupShipment && (
+              <span className="text-[10px] text-slate-500">
+                Different courier? Update the fields below before confirming.
+              </span>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label className="block text-[11px] font-medium text-slate-500 uppercase mb-1">
+                Courier company
+              </label>
+              <input
+                type="text"
+                value={draft.trackingCompany || ''}
+                onChange={(e) => update({ trackingCompany: e.target.value })}
+                placeholder="e.g. TCS, Leopard"
+                className="w-full px-3 py-1.5 border border-slate-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-slate-500 uppercase mb-1">
+                Tracking ID
+              </label>
+              <input
+                type="text"
+                value={draft.trackingId || ''}
+                onChange={(e) => update({ trackingId: e.target.value })}
+                placeholder="123456789"
+                className="w-full px-3 py-1.5 border border-slate-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
+              />
+            </div>
+            <div>
+              <label className="block text-[11px] font-medium text-slate-500 uppercase mb-1">
+                Tracking link
+              </label>
+              <input
+                type="url"
+                value={draft.trackingLink || ''}
+                onChange={(e) => update({ trackingLink: e.target.value })}
+                placeholder="https://"
+                className="w-full px-3 py-1.5 border border-slate-200 rounded-md text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
+              />
+            </div>
+          </div>
+        </div>
 
         <div className="px-5 py-3 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
           <button

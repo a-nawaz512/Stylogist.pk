@@ -26,16 +26,25 @@ export const useProducts = (params = {}) => {
     });
 };
 
+// Shared query options factory used by both `useProduct` and the React
+// Router loader for /product/:slug. Letting the loader call
+// `queryClient.prefetchQuery(productBySlugQuery(slug))` means by the time
+// the component mounts the data is in cache — no skeleton flash, JSON-LD
+// emits on first paint.
+export const productBySlugQuery = (slug) => ({
+    queryKey: [...PRODUCTS_KEY, 'slug', slug],
+    queryFn: async () => {
+        const { data } = await axiosClient.get(`/products/${slug}`);
+        return data.data;
+    },
+    staleTime: PRODUCT_DETAIL_STALE_MS,
+    gcTime: PRODUCT_DETAIL_GC_MS,
+});
+
 export const useProduct = (slug) => {
     return useQuery({
-        queryKey: [...PRODUCTS_KEY, 'slug', slug],
-        queryFn: async () => {
-            const { data } = await axiosClient.get(`/products/${slug}`);
-            return data.data;
-        },
+        ...productBySlugQuery(slug),
         enabled: !!slug,
-        staleTime: PRODUCT_DETAIL_STALE_MS,
-        gcTime: PRODUCT_DETAIL_GC_MS,
     });
 };
 

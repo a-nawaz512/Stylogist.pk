@@ -27,12 +27,15 @@ const aggregateFromVariants = (variants) => {
 
 // Normalize a variant payload from the admin form. Folds the legacy `material`
 // field into `ingredients` so we can ship the rename without breaking older
-// clients still posting the old key.
+// clients still posting the old key. Stock falls back to 50 when omitted so
+// admins don't have to type it for routine catalogue uploads.
 const normalizeVariant = (v) => {
-  const { material, ingredients, ...rest } = v;
+  const { material, ingredients, stock, ...rest } = v;
+  const stockNumber = Number(stock);
   return {
     ...rest,
     ingredients: (ingredients ?? material ?? "").toString().trim(),
+    stock: Number.isFinite(stockNumber) && stockNumber >= 0 ? stockNumber : 50,
   };
 };
 

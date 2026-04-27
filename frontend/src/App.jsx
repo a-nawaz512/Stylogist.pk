@@ -1,5 +1,7 @@
 import React, { lazy, Suspense } from 'react'
 import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom'
+import { queryClient } from './main'
+import { productBySlugQuery } from './features/products/useProductHooks'
 // Storefront critical path — ship on first paint.
 import Home from './commonpages/Home'
 import Navbar from './commonpages/Navbar'
@@ -145,6 +147,22 @@ const route = createBrowserRouter([
 
       {
         path: "/product/:slug",
+        // Loader prefetches the product into the React Query cache before
+        // the component renders. By the time <ProductDetailsPage /> mounts,
+        // `useProduct(slug)` resolves synchronously from cache → JSON-LD
+        // ships in the very first DOM commit, fixing the "Product not found"
+        // false negative on the schema markup validator.
+        loader: async ({ params }) => {
+          const slug = params.slug;
+          if (!slug) return null;
+          try {
+            await queryClient.prefetchQuery(productBySlugQuery(slug));
+          } catch {
+            // Network/404 errors are surfaced by the component's own error
+            // boundary; the loader never throws so navigation isn't blocked.
+          }
+          return null;
+        },
         element: <ProductDetailsPage />
       },
       {

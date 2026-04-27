@@ -32,6 +32,40 @@ export const useUpdateReviewStatus = () => {
     });
 };
 
+export const useAdminCreateReview = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async (payload) => {
+            const { data } = await axiosClient.post('/reviews/admin', payload);
+            return data.data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: REVIEWS_KEY });
+            toast.success('Review created');
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to create review');
+        },
+    });
+};
+
+export const useAdminUpdateReview = () => {
+    const qc = useQueryClient();
+    return useMutation({
+        mutationFn: async ({ id, payload }) => {
+            const { data } = await axiosClient.patch(`/reviews/${id}`, payload);
+            return data.data;
+        },
+        onSuccess: () => {
+            qc.invalidateQueries({ queryKey: REVIEWS_KEY });
+            toast.success('Review updated');
+        },
+        onError: (error) => {
+            toast.error(error.response?.data?.message || 'Failed to update review');
+        },
+    });
+};
+
 export const useDeleteReview = () => {
     const qc = useQueryClient();
     return useMutation({

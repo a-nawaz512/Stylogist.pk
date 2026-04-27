@@ -1,18 +1,24 @@
 import { Router } from "express";
 import * as ReviewController from "./review.controller.js";
 import { authMiddleware } from "../../middlewares/auth.middleware.js";
-import { restrictTo } from "../../middlewares/role.middleware.js";
+import { restrictTo, hasPermission } from "../../middlewares/role.middleware.js";
 import { validate } from "../../middlewares/validate.middleware.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 import {
   createReviewSchema,
   updateReviewStatusSchema,
   reviewIdParamSchema,
+  adminCreateReviewSchema,
+  adminUpdateReviewSchema,
 } from "./review.validation.js";
 
 const router = Router();
 
-const adminOnly = [authMiddleware, restrictTo("Super Admin", "Staff")];
+const adminOnly = [
+  authMiddleware,
+  restrictTo("Super Admin", "Staff"),
+  hasPermission("reviews:moderate"),
+];
 
 // Public: list approved reviews for a product (by slug or id).
 router.get("/product/:productId", catchAsync(ReviewController.listProductReviews));
@@ -27,8 +33,24 @@ router.get(
   catchAsync(ReviewController.getReviewEligibility)
 );
 
-// Admin: moderate.
+// Admin: list / moderate / delete.
 router.get("/", ...adminOnly, catchAsync(ReviewController.listReviews));
+
+// Admin: author a review on behalf of someone (skips the "must have a
+// delivered order" check) and edit any review's content/rating/status.
+router.post(
+  "/admin",
+  ...adminOnly,
+  validate(adminCreateReviewSchema),
+  catchAsync(ReviewController.adminCreateReview)
+);
+router.patch(
+  "/:id",
+  ...adminOnly,
+  validate(adminUpdateReviewSchema),
+  catchAsync(ReviewController.adminUpdateReview)
+);
+
 router.patch(
   "/:id/status",
   ...adminOnly,

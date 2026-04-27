@@ -85,6 +85,79 @@ export const updateReviewStatus = async (id, status) => {
   ]);
 };
 
+// Admin-authored review. Bypasses the "must have a delivered order" check
+// because the admin is authoring on behalf of someone (e.g. a paper survey,
+// a marketplace import, or seeding the catalogue).
+export const adminCreateReview = async (adminId, payload) => {
+  const { product, user, displayName, rating, comment, status } = payload;
+
+  const productDoc = await Product.findById(product).select("_id").lean();
+  if (!productDoc) throw new ApiError(404, "Product not found");
+
+  // Resolve the author. If `user` is provided we attach the review to that
+  // account; otherwise we fall back to the acting admin and stash the
+  // displayName in a custom field so the storefront shows the right author.
+  let authorId = user;
+  if (user) {
+    const exists = await User.exists({ _id: user });
+    if (!exists) throw new ApiError(404, "Selected user not found");
+  } else {
+    authorId = adminId;
+  }
+
+  const existing = await Review.findOne({ user: authorId, product });
+  if (existing) {
+    throw new ApiError(
+      409,
+      "A review already exists for this product/user combination. Edit the existing one instead."
+    );
+  }
+
+  const review = await Review.create({
+    user: authorId,
+    product,
+    rating,
+    comment: comment || "",
+    status: status || "approved",
+    displayName: displayName || undefined,
+  });
+
+  if (review.status === "approved") {
+    await recomputeProductStats(product);
+  }
+
+  return review.populate([
+    { path: "user", select: "name email" },
+    { path: "product", select: "name slug" },
+  ]);
+};
+
+// Admin-edit: arbitrary fields are mutable. Recomputes product stats whenever
+// rating or status changes so denormalised aggregates never drift.
+export const adminUpdateReview = async (id, payload) => {
+  const review = await Review.findById(id);
+  if (!review) throw new ApiError(404, "Review not found");
+
+  const ratingChanged = payload.rating !== undefined && payload.rating !== review.rating;
+  const statusChanged = payload.status !== undefined && payload.status !== review.status;
+
+  if (payload.rating !== undefined) review.rating = payload.rating;
+  if (payload.comment !== undefined) review.comment = payload.comment;
+  if (payload.status !== undefined) review.status = payload.status;
+  if (payload.displayName !== undefined) review.displayName = payload.displayName;
+
+  await review.save();
+
+  if (ratingChanged || statusChanged) {
+    await recomputeProductStats(review.product);
+  }
+
+  return review.populate([
+    { path: "user", select: "name email" },
+    { path: "product", select: "name slug" },
+  ]);
+};
+
 export const deleteReview = async (id) => {
   const review = await Review.findById(id);
   if (!review) throw new ApiError(404, "Review not found");
