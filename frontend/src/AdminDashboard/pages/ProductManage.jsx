@@ -35,6 +35,7 @@ export default function ProductManage() {
           editingId={ctl.editingId}
           categoryTree={ctl.categoryTree}
           brands={ctl.brands}
+          ingredients={ctl.ingredients}
           onGenerateSlug={ctl.handleGenerateSlug}
           onThumbnailUpload={ctl.handleThumbnailUpload}
           onRemoveThumbnail={ctl.removeThumbnail}

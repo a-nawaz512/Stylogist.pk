@@ -57,6 +57,9 @@ export const createProductSchema = z.object({
     benefits: z.array(z.string().trim().min(1)).optional(),
     uses: z.array(z.string().trim().min(1)).optional(),
     itemDetails: itemDetailsSchema,
+    // Many-to-many ingredient tagging. Accepts ObjectIds — frontend resolves
+    // names to ids via the ingredient autocomplete.
+    ingredients: z.array(z.string().regex(objectId, "Invalid ingredient id")).optional(),
     category: z.string().regex(objectId, "Invalid category id"),
     categories: z.array(z.string().regex(objectId, "Invalid category id")).optional(),
     subCategory: z.string().regex(objectId, "Invalid subCategory id").optional().nullable(),
@@ -93,6 +96,7 @@ export const updateProductSchema = z.object({
     benefits: z.array(z.string().trim().min(1)).optional(),
     uses: z.array(z.string().trim().min(1)).optional(),
     itemDetails: itemDetailsSchema,
+    ingredients: z.array(z.string().regex(objectId, "Invalid ingredient id")).optional(),
     category: z.string().regex(objectId).optional(),
     categories: z.array(z.string().regex(objectId)).optional(),
     subCategory: z.string().regex(objectId).optional().nullable(),

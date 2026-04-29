@@ -208,6 +208,120 @@ export function CategoryMultiSelect({ tree, selected, onChange, onAdd }) {
   );
 }
 
+// --- searchable multi-select combobox --------------------------------------
+// Used by the ingredient picker on the product form. Keeps selections
+// visible as removable chips above the input so the admin can see the full
+// list at a glance.
+
+export function SearchableMultiSelect({ value = [], onChange, options, placeholder, onAdd, addLabel = 'New' }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDown = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [open]);
+
+  const selSet = useMemo(() => new Set(value.map(String)), [value]);
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return options;
+    const q = search.trim().toLowerCase();
+    return options.filter((o) => o.label.toLowerCase().includes(q));
+  }, [options, search]);
+
+  const selectedLabels = useMemo(
+    () => options.filter((o) => selSet.has(String(o.value))),
+    [options, selSet]
+  );
+
+  const toggle = (val) => {
+    const sval = String(val);
+    if (selSet.has(sval)) onChange(value.filter((v) => String(v) !== sval));
+    else onChange([...value, val]);
+  };
+
+  return (
+    <div ref={ref} className="space-y-2">
+      <div className="border border-slate-200 rounded-lg bg-white overflow-hidden">
+        <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 bg-slate-50">
+          <div className="relative flex-1">
+            <FiSearch size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setOpen(true); }}
+              onFocus={() => setOpen(true)}
+              placeholder={placeholder || 'Search…'}
+              className="w-full pl-8 pr-2 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
+            />
+          </div>
+          {onAdd && (
+            <button
+              type="button"
+              onClick={onAdd}
+              className="shrink-0 px-2 py-1.5 border border-slate-200 rounded-md text-[11px] font-medium text-[#007074] hover:bg-[#007074]/5 inline-flex items-center gap-1"
+            >
+              <FiPlus size={11} /> {addLabel}
+            </button>
+          )}
+        </div>
+        {open && (
+          <div className="max-h-56 overflow-y-auto py-1">
+            {filtered.length === 0 ? (
+              <p className="text-center text-xs text-slate-400 py-4">No matches.</p>
+            ) : (
+              filtered.map((o) => {
+                const checked = selSet.has(String(o.value));
+                return (
+                  <button
+                    key={o.value}
+                    type="button"
+                    onClick={() => toggle(o.value)}
+                    className={`w-full text-left px-3 py-2 text-sm hover:bg-slate-50 inline-flex items-center justify-between ${
+                      checked ? 'text-[#007074] font-medium' : 'text-slate-700'
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <input type="checkbox" readOnly checked={checked} className="w-4 h-4 accent-[#007074]" />
+                      {o.label}
+                    </span>
+                    {checked && <FiCheck size={14} />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
+      {selectedLabels.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selectedLabels.map((o) => (
+            <span
+              key={o.value}
+              className="inline-flex items-center gap-1.5 text-[11px] font-medium bg-[#007074]/10 text-[#007074] px-2 py-0.5 rounded-full"
+            >
+              {o.label}
+              <button
+                type="button"
+                onClick={() => toggle(o.value)}
+                className="text-[#007074]/70 hover:text-[#007074]"
+                aria-label={`Remove ${o.label}`}
+              >
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // --- searchable single-select combobox -------------------------------------
 
 export function SearchableSelect({ value, onChange, options, placeholder, onAdd }) {

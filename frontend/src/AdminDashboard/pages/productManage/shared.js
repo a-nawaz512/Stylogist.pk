@@ -156,6 +156,9 @@ export const emptyForm = {
   category: '',
   categories: [],
   brand: '',
+  // Many-to-many ingredient tags. Distinct from `Variant.ingredients`
+  // (free-text per variant). Ids resolve to Ingredient docs server-side.
+  ingredients: [],
   status: 'draft',
   isFeatured: false,
   isTrending: false,

@@ -97,6 +97,17 @@ const productSchema = new mongoose.Schema(
       index: true,
     },
 
+    // Many-to-many link to the canonical Ingredient taxonomy. Drives the
+    // storefront ingredient filter and the /ingredient/:slug SEO pages.
+    // Distinct from `Variant.ingredients` (free-text per variant) — this
+    // is the structured tagging that supports indexed queries.
+    ingredients: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Ingredient",
+      },
+    ],
+
     status: {
       type: String,
       enum: ["draft", "published"],
@@ -186,5 +197,9 @@ productSchema.index({ status: 1, totalSales: -1 });
 productSchema.index({ status: 1, isDealActive: 1 });
 productSchema.index({ category: 1, status: 1, createdAt: -1 });
 productSchema.index({ brand: 1, status: 1, createdAt: -1 });
+// Multikey index for the ingredient filter — Mongo automatically expands
+// the ObjectId array, so a {ingredients: <id>} query (or $in / $all over
+// multiple ids) is a single bounded index scan instead of a collscan.
+productSchema.index({ ingredients: 1, status: 1, createdAt: -1 });
 
 export const Product = mongoose.model("Product", productSchema);

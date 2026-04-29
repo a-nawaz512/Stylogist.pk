@@ -26,6 +26,7 @@ const WishlistPage = lazy(() => import('./commonpages/WishlistPage'))
 const CheckoutPage = lazy(() => import('./commonpages/checkoutPage'))
 const PageNotFound = lazy(() => import('./commonpages/PageNotFound'))
 const SearchResults = lazy(() => import('./commonpages/SearchResults'))
+const IngredientPage = lazy(() => import('./commonpages/IngredientPage'))
 const Login = lazy(() => import('./commonpages/Login'))
 const Signup = lazy(() => import('./commonpages/Signup'))
 const ForgotPassword = lazy(() => import('./commonpages/ForgotPassword'))
@@ -43,6 +44,7 @@ const ReviewManage = lazy(() => import('./AdminDashboard/pages/ReviewManage'))
 const RevenueAnalytics = lazy(() => import('./AdminDashboard/pages/RevenueAnalytics'))
 const CategoryManage = lazy(() => import('./AdminDashboard/pages/CategoryManage'))
 const BrandManage = lazy(() => import('./AdminDashboard/pages/BrandManage'))
+const IngredientManage = lazy(() => import('./AdminDashboard/pages/IngredientManage'))
 const AdminSettings = lazy(() => import('./AdminDashboard/pages/AdminSettings'))
 const StaffPermissions = lazy(() => import('./AdminDashboard/pages/StaffPermissions'))
 
@@ -136,6 +138,10 @@ const route = createBrowserRouter([
         element: <SearchResults />
       },
       {
+        path: "/ingredient/:slug",
+        element: <IngredientPage />
+      },
+      {
         path: "/terms",
         element: <TermsPrivacy />
       },
@@ -215,6 +221,7 @@ const route = createBrowserRouter([
       { path: 'products', element: <PageSuspense><ProductManage /></PageSuspense> },
       { path: 'categories', element: <PageSuspense><CategoryManage /></PageSuspense> },
       { path: 'brands', element: <PageSuspense><BrandManage /></PageSuspense> },
+      { path: 'ingredients', element: <PageSuspense><IngredientManage /></PageSuspense> },
       { path: 'orders', element: <PageSuspense><OrderLogs /></PageSuspense> },
       { path: 'users', element: <PageSuspense><UserControl /></PageSuspense> },
       { path: 'reviews', element: <PageSuspense><ReviewManage /></PageSuspense> },

@@ -17,6 +17,7 @@ export const PERMISSION_GROUPS = [
     permissions: [
       { key: "categories:write", label: "Manage categories" },
       { key: "brands:write", label: "Manage brands" },
+      { key: "ingredients:write", label: "Manage ingredients" },
     ],
   },
   {

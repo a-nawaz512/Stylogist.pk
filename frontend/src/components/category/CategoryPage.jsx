@@ -9,6 +9,7 @@ import { FaStar } from 'react-icons/fa';
 import { useProducts } from '../../features/products/useProductHooks';
 import { useCategories } from '../../features/categories/useCategoryHooks';
 import { useBrands } from '../../features/brands/useBrandHooks';
+import { useIngredients } from '../../features/ingredients/useIngredientHooks';
 import useWishlistStore from '../../store/useWishlistStore';
 import { resolveImageUrl } from '../../utils/imageUrl';
 
@@ -37,26 +38,47 @@ export default function CategoryPage() {
   const [page, setPage] = useState(1);
   const [filtersOpenMobile, setFiltersOpenMobile] = useState(false);
 
+  // Ingredient filter state. Stored as an array of slugs (URL-friendly,
+  // human-readable in the address bar). Logic toggles between AND ("must
+  // contain every selected ingredient") and OR ("any of these").
+  const [selectedIngredients, setSelectedIngredients] = useState(() =>
+    (searchParams.get('ingredients') || '').split(',').map((s) => s.trim()).filter(Boolean)
+  );
+  const [ingredientLogic, setIngredientLogic] = useState(
+    () => (searchParams.get('ingredientLogic') || 'or').toLowerCase() === 'and' ? 'and' : 'or'
+  );
+
   useEffect(() => {
     const next = new URLSearchParams();
     if (category) next.set('category', category);
     if (brand) next.set('brand', brand);
     if (search) next.set('search', search);
+    if (selectedIngredients.length) {
+      next.set('ingredients', selectedIngredients.join(','));
+      // Only emit logic when AND — keeps the URL clean for the default OR.
+      if (ingredientLogic === 'and') next.set('ingredientLogic', 'and');
+    }
     setSearchParams(next, { replace: true });
-  }, [category, brand, search, setSearchParams]);
+  }, [category, brand, search, selectedIngredients, ingredientLogic, setSearchParams]);
 
   useEffect(() => {
     const urlCategory = searchParams.get('category') || '';
     const urlBrand = searchParams.get('brand') || '';
     const urlSearch = searchParams.get('search') || '';
+    const urlIngredients = (searchParams.get('ingredients') || '').split(',').map((s) => s.trim()).filter(Boolean);
+    const urlLogic = (searchParams.get('ingredientLogic') || 'or').toLowerCase() === 'and' ? 'and' : 'or';
     if (urlCategory !== category) setCategory(urlCategory);
     if (urlBrand !== brand) setBrand(urlBrand);
     if (urlSearch !== search) setSearch(urlSearch);
+    if (urlIngredients.join(',') !== selectedIngredients.join(',')) setSelectedIngredients(urlIngredients);
+    if (urlLogic !== ingredientLogic) setIngredientLogic(urlLogic);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   const { data: categories = [] } = useCategories({ active: 'true' });
   const { data: brands = [] } = useBrands({ active: 'true' });
+  const { data: ingredientsResp } = useIngredients({ active: 'true', limit: 200, includeCount: 'true' });
+  const ingredients = ingredientsResp?.items ?? [];
 
   const params = useMemo(() => {
     const p = { page, limit: PAGE_SIZE, sort };
@@ -66,8 +88,12 @@ export default function CategoryPage() {
     if (inStockOnly) p.inStock = 'true';
     if (dealOnly) p.deal = 'true';
     if (search) p.search = search;
+    if (selectedIngredients.length) {
+      p.ingredients = selectedIngredients.join(',');
+      p.ingredientLogic = ingredientLogic;
+    }
     return p;
-  }, [page, sort, category, brand, maxPrice, inStockOnly, dealOnly, search]);
+  }, [page, sort, category, brand, maxPrice, inStockOnly, dealOnly, search, selectedIngredients, ingredientLogic]);
 
   const { data, isLoading, isError, refetch, isFetching } = useProducts(params);
   const items = data?.items ?? [];
@@ -86,6 +112,15 @@ export default function CategoryPage() {
     setDealOnly(false);
     setSort('newest');
     setSearch('');
+    setSelectedIngredients([]);
+    setIngredientLogic('or');
+    setPage(1);
+  };
+
+  const toggleIngredient = (slug) => {
+    setSelectedIngredients((prev) =>
+      prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug]
+    );
     setPage(1);
   };
 
@@ -169,6 +204,18 @@ export default function CategoryPage() {
                   options={brands.map((b) => ({ value: b._id, label: b.name }))}
                 />
               </FilterSection>
+
+              {ingredients.length > 0 && (
+                <FilterSection title="Ingredients">
+                  <IngredientFilter
+                    options={ingredients}
+                    selected={selectedIngredients}
+                    onToggle={toggleIngredient}
+                    logic={ingredientLogic}
+                    onLogicChange={setIngredientLogic}
+                  />
+                </FilterSection>
+              )}
 
               <FilterSection title={`Max price: ${maxPrice ? formatPKR(maxPrice) : 'any'}`}>
                 <input
@@ -393,6 +440,77 @@ function FilterSection({ title, children }) {
     <div>
       <h3 className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+// Ingredient multi-select filter. Includes a search box + AND/OR logic
+// toggle. AND ("must contain all selected") narrows aggressively, OR ("any
+// of these") is the default and is more discovery-friendly.
+function IngredientFilter({ options, selected, onToggle, logic, onLogicChange }) {
+  const [q, setQ] = useState('');
+  const filtered = useMemo(() => {
+    if (!q.trim()) return options;
+    const needle = q.trim().toLowerCase();
+    return options.filter((o) => o.name.toLowerCase().includes(needle));
+  }, [options, q]);
+
+  return (
+    <div className="space-y-3">
+      <div className="relative">
+        <FiSearch size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search ingredients"
+          className="w-full pl-8 pr-2 py-1.5 text-xs bg-white border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-[#007074]/20 focus:border-[#007074]"
+        />
+      </div>
+      <div className="inline-flex bg-slate-100 rounded-md p-0.5 text-[10px] font-semibold uppercase tracking-wider">
+        <button
+          type="button"
+          onClick={() => onLogicChange('or')}
+          className={`px-2.5 py-1 rounded ${logic === 'or' ? 'bg-white text-[#007074] shadow-sm' : 'text-slate-500'}`}
+          title="Match products that contain ANY of the selected ingredients"
+        >
+          Any
+        </button>
+        <button
+          type="button"
+          onClick={() => onLogicChange('and')}
+          className={`px-2.5 py-1 rounded ${logic === 'and' ? 'bg-white text-[#007074] shadow-sm' : 'text-slate-500'}`}
+          title="Match products that contain ALL of the selected ingredients"
+        >
+          All
+        </button>
+      </div>
+      <ul className="space-y-1 max-h-56 overflow-y-auto pr-1 -mr-1">
+        {filtered.length === 0 ? (
+          <li className="text-xs text-slate-400 py-2">No matches.</li>
+        ) : (
+          filtered.map((ing) => {
+            const checked = selected.includes(ing.slug);
+            return (
+              <li key={ing._id}>
+                <label className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 rounded px-1 py-0.5">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => onToggle(ing.slug)}
+                    className="w-4 h-4 accent-[#007074]"
+                  />
+                  <span className={`flex-1 truncate ${checked ? 'text-[#007074] font-medium' : 'text-slate-700'}`}>
+                    {ing.name}
+                  </span>
+                  {typeof ing.productCount === 'number' && (
+                    <span className="text-[10px] text-slate-400 tabular-nums">{ing.productCount}</span>
+                  )}
+                </label>
+              </li>
+            );
+          })
+        )}
+      </ul>
     </div>
   );
 }

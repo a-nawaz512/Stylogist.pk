@@ -16,6 +16,7 @@ import uploadRoutes from './modules/uploads/upload.routes.js';
 import reviewRoutes from './modules/reviews/review.routes.js';
 import settingsRoutes from './modules/settings/settings.routes.js';
 import seoRoutes from './modules/seo/seo.routes.js';
+import ingredientRoutes from './modules/ingredients/ingredient.routes.js';
 
 const app = express();
 
@@ -104,6 +105,7 @@ app.use('/api/v1/brands', brandRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
 app.use('/api/v1/admin', adminRoutes);
+app.use('/api/v1/ingredients', ingredientRoutes);
 app.use('/api/v1/uploads', uploadRoutes);
 app.use('/api/v1/settings', settingsRoutes);
 

@@ -3,6 +3,7 @@ import { Variant } from "./variant.model.js";
 import { ProductMedia } from "./media.model.js";
 import { Category } from "../categories/category.model.js";
 import { Brand } from "../brands/brand.model.js";
+import { Ingredient } from "../ingredients/ingredient.model.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { isValidObjectId } from "mongoose";
 import { getDescendantCategoryIds } from "../categories/category.service.js";
@@ -104,6 +105,7 @@ export const createProduct = async (payload) => {
     benefits = [],
     uses = [],
     itemDetails = {},
+    ingredients: ingredientIds = [],
     ...rest
   } = payload;
 
@@ -158,6 +160,7 @@ export const createProduct = async (payload) => {
     benefits: Array.isArray(benefits) ? benefits.filter(Boolean) : [],
     uses: Array.isArray(uses) ? uses.filter(Boolean) : [],
     itemDetails: itemDetails || {},
+    ingredients: Array.isArray(ingredientIds) ? [...new Set(ingredientIds)] : [],
     category,
     categories: categoriesList,
     subCategory: subCategory || undefined,
@@ -222,6 +225,7 @@ export const updateProduct = async (id, payload) => {
     benefits,
     uses,
     itemDetails,
+    ingredients: ingredientIds,
     ...rest
   } = payload;
 
@@ -275,6 +279,10 @@ export const updateProduct = async (id, payload) => {
   if (itemDetails !== undefined) {
     // Replace as a whole so removing a key on the client clears it server-side.
     product.itemDetails = itemDetails || {};
+  }
+  if (Array.isArray(ingredientIds)) {
+    // Authoritative replace — admin form sends the final desired set.
+    product.ingredients = [...new Set(ingredientIds)];
   }
 
   Object.entries(rest).forEach(([key, value]) => {
@@ -355,6 +363,9 @@ export const getAllProducts = async (query = {}) => {
     limit = 12,
     search,
     status,
+    ingredient, // single slug
+    ingredients, // CSV slugs (multi-select filter)
+    ingredientLogic, // 'and' | 'or' (default 'or')
   } = query;
 
   const filter = {};
@@ -394,6 +405,29 @@ export const getAllProducts = async (query = {}) => {
   }
   if (featured === "true") filter.isFeatured = true;
   if (trending === "true") filter.isTrending = true;
+
+  // Ingredient filter — accepts a single slug, a CSV of slugs, or both. We
+  // resolve slugs to ObjectIds once so the resulting query hits the
+  // multikey index on `product.ingredients`.
+  const ingredientSlugs = [
+    ...(ingredient ? [ingredient] : []),
+    ...((ingredients || "").toString().split(",").map((s) => s.trim()).filter(Boolean)),
+  ];
+  if (ingredientSlugs.length) {
+    const ingredientDocs = await Ingredient.find({ slug: { $in: [...new Set(ingredientSlugs)] } })
+      .select("_id")
+      .lean();
+    const ingredientIds = ingredientDocs.map((d) => d._id);
+    if (ingredientIds.length) {
+      // 'and' = product must contain every selected ingredient; 'or' = any.
+      const op = (ingredientLogic || "").toLowerCase() === "and" ? "$all" : "$in";
+      filter.ingredients = { [op]: ingredientIds };
+    } else {
+      // No matching ingredients — short-circuit to an empty result rather
+      // than silently dropping the filter and returning everything.
+      return { items: [], pagination: { page: 1, limit: Number(limit) || 12, total: 0, pages: 0 } };
+    }
+  }
 
   // Text search: collapse into a single filter so the query planner can
   // pick one index instead of running two `.find()` stages.
@@ -467,6 +501,7 @@ export const getProductById = async (id) => {
   const product = await Product.findById(id)
     .populate("category", "name slug")
     .populate("brand", "name slug logo")
+    .populate("ingredients", "name slug image")
     .lean();
   if (!product) throw new ApiError(404, "Product not found");
   return loadProductPayload(product);
@@ -476,6 +511,7 @@ export const getProductBySlug = async (slug) => {
   const product = await Product.findOne({ slug })
     .populate("category", "name slug")
     .populate("brand", "name slug logo")
+    .populate("ingredients", "name slug image")
     .lean();
   if (!product) throw new ApiError(404, "Product not found");
   return loadProductPayload(product);

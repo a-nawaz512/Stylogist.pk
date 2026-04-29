@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   FiGrid, FiBox, FiShoppingBag, FiUsers, FiSettings,
-  FiLogOut, FiMessageSquare, FiBarChart2, FiMenu, FiX, FiTag, FiFolder, FiShield
+  FiLogOut, FiMessageSquare, FiBarChart2, FiMenu, FiX, FiTag, FiFolder, FiShield, FiDroplet
 } from 'react-icons/fi';
 import logo from "../../../public/logo.png";
 import useAuthStore from '../../store/useAuthStore';
@@ -16,6 +16,7 @@ const LINKS = [
   { name: 'Products', path: '/admin/products', icon: <FiBox />, requires: 'products:read' },
   { name: 'Categories', path: '/admin/categories', icon: <FiFolder />, requires: 'categories:write' },
   { name: 'Brands', path: '/admin/brands', icon: <FiTag />, requires: 'brands:write' },
+  { name: 'Ingredients', path: '/admin/ingredients', icon: <FiDroplet />, requires: 'ingredients:write' },
   { name: 'Orders', path: '/admin/orders', icon: <FiShoppingBag />, requires: 'orders:read' },
   { name: 'Customers', path: '/admin/users', icon: <FiUsers />, requires: 'customers:read' },
   { name: 'Reviews', path: '/admin/reviews', icon: <FiMessageSquare />, requires: 'reviews:moderate' },

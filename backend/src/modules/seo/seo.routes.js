@@ -4,6 +4,7 @@ import { Variant } from "../products/variant.model.js";
 import { ProductMedia } from "../products/media.model.js";
 import { Category } from "../categories/category.model.js";
 import { Brand } from "../brands/brand.model.js";
+import { Ingredient } from "../ingredients/ingredient.model.js";
 import env from "../../config/env.js";
 import { catchAsync } from "../../utils/catchAsync.js";
 
@@ -64,7 +65,7 @@ router.get(
 
     // Concurrent reads — three small queries, all selecting only what we need
     // for the sitemap so we don't pull rich text descriptions.
-    const [products, categories, brands] = await Promise.all([
+    const [products, categories, brands, ingredients] = await Promise.all([
       Product.find({ status: 'published' })
         .select('slug updatedAt')
         .sort({ updatedAt: -1 })
@@ -72,6 +73,12 @@ router.get(
         .lean(),
       Category.find({ isActive: true }).select('slug updatedAt').lean(),
       Brand.find({ isActive: true }).select('slug updatedAt').lean(),
+      // `isIndexable` controls whether an ingredient page is included in
+      // the sitemap and emits `noindex`. Active-but-not-indexable
+      // ingredients still drive filters; they just don't get a sitemap entry.
+      Ingredient.find({ isActive: true, isIndexable: true })
+        .select('slug updatedAt')
+        .lean(),
     ]);
 
     const productUrls = products.map((p) => ({
@@ -95,7 +102,14 @@ router.get(
       priority: 0.5,
     }));
 
-    const all = [...staticUrls, ...productUrls, ...categoryUrls, ...brandUrls].slice(0, SITEMAP_LIMIT);
+    const ingredientUrls = ingredients.map((i) => ({
+      loc: `${base}/ingredient/${i.slug}`,
+      lastmod: i.updatedAt,
+      changefreq: 'weekly',
+      priority: 0.6,
+    }));
+
+    const all = [...staticUrls, ...productUrls, ...categoryUrls, ...brandUrls, ...ingredientUrls].slice(0, SITEMAP_LIMIT);
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

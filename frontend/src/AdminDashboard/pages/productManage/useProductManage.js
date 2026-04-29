@@ -9,6 +9,7 @@ import {
 } from '../../../features/products/useProductHooks';
 import { useCategories } from '../../../features/categories/useCategoryHooks';
 import { useBrands } from '../../../features/brands/useBrandHooks';
+import { useIngredients } from '../../../features/ingredients/useIngredientHooks';
 import { useUploadImage, useUploadImages } from '../../../features/uploads/useUploadHooks';
 import { emptyForm, emptyItemDetails, emptyVariant, slugify } from './shared';
 
@@ -32,6 +33,10 @@ export default function useProductManage() {
   const { data: productsResp, isLoading: loadingProducts } = useProducts({ status: statusFilter, limit: 100 });
   const { data: categories = [] } = useCategories({ active: 'all' });
   const { data: brands = [] } = useBrands();
+  // Pull active ingredients for the multi-select. limit:200 covers any
+  // reasonable taxonomy without paginating the picker.
+  const { data: ingredientsResp } = useIngredients({ active: 'true', limit: 200 });
+  const ingredients = ingredientsResp?.items ?? [];
   const { data: editingProductData } = useProductById(editingId);
 
   const createMut = useCreateProduct();
@@ -90,6 +95,9 @@ export default function useProductManage() {
       category: primaryCategory,
       categories: [...new Set(existingCategories)],
       brand: product.brand?._id || product.brand || '',
+      ingredients: Array.isArray(product.ingredients)
+        ? product.ingredients.map((i) => i?._id || i).filter(Boolean).map(String)
+        : [],
       status: product.status || 'draft',
       isFeatured: !!product.isFeatured,
       isTrending: !!product.isTrending,
@@ -299,6 +307,7 @@ export default function useProductManage() {
       category: form.category || form.categories[0],
       categories: form.categories?.length ? form.categories : undefined,
       brand: form.brand || undefined,
+      ingredients: form.ingredients?.length ? form.ingredients : undefined,
       status: form.status,
       isFeatured: form.isFeatured,
       isTrending: !!form.isTrending,
@@ -359,6 +368,7 @@ export default function useProductManage() {
     categories,
     categoryTree,
     brands,
+    ingredients,
     products: filteredProducts,
     loadingProducts,
 
