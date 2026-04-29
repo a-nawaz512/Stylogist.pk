@@ -310,7 +310,7 @@ export default function ProductForm({
             <Field
               as="div"
               label="Ingredients"
-              hint="Drives the storefront ingredient filter and the per-ingredient SEO landing pages."
+              hint=""
             >
               <SearchableMultiSelect
                 value={form.ingredients || []}
